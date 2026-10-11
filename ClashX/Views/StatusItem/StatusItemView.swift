@@ -23,21 +23,16 @@ final class StatusItemView: NSView, StatusItemViewProtocol {
 
     private static let horizontalPadding: CGFloat = 3
     private static let iconSize: CGFloat = 16
-    private static let iconTextSpacing: CGFloat = 2
     private static let itemHeight: CGFloat = 22
     private let textFont = StatusItemTool.font
     private lazy var iconImage: NSImage = StatusItemTool.menuImage
 
-    private let fixedTextWidth = ceil(
-        ("100.0MB/s" as NSString).size(withAttributes: [.font: StatusItemTool.font]).width
-    )
+    private let fixedTextWidth: CGFloat
+    private let statusItemLengthWithSpeed: CGFloat
+    private let statusItemLengthWithoutSpeed: CGFloat
 
-    private var statusItemLengthWithoutSpeed: CGFloat {
-        Self.horizontalPadding * 2 + Self.iconSize
-    }
-
-    private var statusItemLengthWithSpeed: CGFloat {
-        statusItemLengthWithoutSpeed + Self.iconTextSpacing + fixedTextWidth
+    private static func measuredFixedTextWidth() -> CGFloat {
+        ceil(("100.0MB/s" as NSString).size(withAttributes: [.font: StatusItemTool.font]).width)
     }
 
     static func create() async -> StatusItemView {
@@ -73,6 +68,10 @@ final class StatusItemView: NSView, StatusItemViewProtocol {
     }
 
     override init(frame frameRect: NSRect) {
+        let fixedTextWidth = Self.measuredFixedTextWidth()
+        self.fixedTextWidth = fixedTextWidth
+        self.statusItemLengthWithSpeed = Self.horizontalPadding * 2 + Self.iconSize + fixedTextWidth
+        self.statusItemLengthWithoutSpeed = Self.horizontalPadding * 2 + Self.iconSize
         super.init(frame: frameRect)
     }
 
@@ -94,26 +93,21 @@ final class StatusItemView: NSView, StatusItemViewProtocol {
 
         let sharedColor = enableProxy ? NSColor.labelColor : NSColor.labelColor.withSystemEffect(.disabled)
 
-        let sourceRect = iconImage.alignmentRect
-        let scale = Self.iconSize / max(sourceRect.width, sourceRect.height, 1)
-        let iconWidth = sourceRect.width * scale
-        let iconHeight = sourceRect.height * scale
         let iconRect = CGRect(
-            x: Self.horizontalPadding + (Self.iconSize - iconWidth) * 0.5,
-            y: (bounds.height - iconHeight) * 0.5,
-            width: iconWidth,
-            height: iconHeight
+            x: Self.horizontalPadding,
+            y: floor((bounds.height - Self.iconSize) * 0.5),
+            width: Self.iconSize,
+            height: Self.iconSize
         )
         NSGraphicsContext.saveGraphicsState()
         sharedColor.set()
         iconRect.fill()
-        iconImage.draw(in: iconRect, from: sourceRect, operation: .destinationIn, fraction: 1.0)
+        iconImage.draw(in: iconRect, from: .zero, operation: .destinationIn, fraction: 1.0)
         NSGraphicsContext.restoreGraphicsState()
 
         guard showSpeed else { return }
 
         let style = NSMutableParagraphStyle()
-        // Keep both rates right-aligned in a fixed-width column.
         style.alignment = .right
 
         let attributes: [NSAttributedString.Key: Any] = [
@@ -126,7 +120,8 @@ final class StatusItemView: NSView, StatusItemViewProtocol {
         let downAttributed = NSAttributedString(string: downText, attributes: attributes)
         let textWidth = fixedTextWidth
         let textHeight = measuredTextHeight
-        let textX = Self.horizontalPadding + Self.iconSize + Self.iconTextSpacing
+        let textRight = bounds.width - Self.horizontalPadding
+        let textX = textRight - textWidth
         let upRect = CGRect(x: textX, y: 12, width: textWidth, height: textHeight)
         let downRect = CGRect(x: textX, y: 2, width: textWidth, height: textHeight)
 
@@ -169,7 +164,6 @@ final class StatusItemView: NSView, StatusItemViewProtocol {
 
     func showSpeedContainer(show: Bool) {
         showSpeed = show
-        updateSize(statusItem, showSpeed: show)
         display()
     }
 }
