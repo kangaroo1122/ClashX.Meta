@@ -17,6 +17,14 @@ enum StatusItemTool {
         }
         if let imagePath = Bundle.main.path(forResource: "menu_icon@2x", ofType: "png"),
            let image = NSImage(contentsOfFile: imagePath) {
+            // Visible bounds of the bundled 64 × 64 image, in bottom-left coordinates.
+            // Ignore its transparent border when drawing the menu bar icon.
+            image.alignmentRect = NSRect(
+                x: image.size.width * 4 / 64,
+                y: image.size.height * 8 / 64,
+                width: image.size.width * 49 / 64,
+                height: image.size.height * 47 / 64
+            )
             image.isTemplate = true
             return image
         }
