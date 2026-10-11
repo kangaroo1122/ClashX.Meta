@@ -66,10 +66,12 @@ final class GitHubUpdateChecker {
         let state: String
     }
 
-    /// Compare numeric components, not lexicographic strings (1.10 > 1.9).
+    /// Numeric suffixes are fork revisions, not prerelease markers:
+    /// 1.4.46 < 1.4.46-1 < 1.4.46-2 < 1.4.47.
+    /// Release eligibility is determined by GitHub's draft/prerelease flags.
     private struct Version {
         let numbers: [Int]
-        let isPrerelease: Bool
+        let revision: Int
 
         init?(_ value: String) {
             let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -77,13 +79,21 @@ final class GitHubUpdateChecker {
             guard !version.isEmpty else { return nil }
             let withoutBuild = version.split(separator: "+", maxSplits: 1, omittingEmptySubsequences: false)[0]
             let parts = withoutBuild.split(separator: "-", maxSplits: 1, omittingEmptySubsequences: false)
-            let components = parts[0].split(separator: ".", omittingEmptySubsequences: false)
+            guard let base = parts.first else { return nil }
+            let components = base.split(separator: ".", omittingEmptySubsequences: false)
             guard !components.isEmpty,
                   components.allSatisfy({ !$0.isEmpty && $0.allSatisfy({ $0.isASCII && $0.isNumber }) }) else { return nil }
             let parsed = components.compactMap { Int($0) }
             guard parsed.count == components.count else { return nil }
             numbers = parsed
-            isPrerelease = parts.count > 1
+            if parts.count > 1 {
+                let suffix = parts[1]
+                guard !suffix.isEmpty, suffix.allSatisfy({ $0.isASCII && $0.isNumber }),
+                      let value = Int(suffix) else { return nil }
+                revision = value
+            } else {
+                revision = 0
+            }
         }
 
         func isNewer(than other: Version) -> Bool {
@@ -92,7 +102,7 @@ final class GitHubUpdateChecker {
                 let rhs = index < other.numbers.count ? other.numbers[index] : 0
                 if lhs != rhs { return lhs > rhs }
             }
-            return !isPrerelease && other.isPrerelease
+            return revision > other.revision
         }
     }
 
@@ -131,9 +141,9 @@ final class GitHubUpdateChecker {
                 showMessage("No published release", detail: NSLocalizedString("No public stable release was found in the update repository. Branch build artifacts are not releases.", comment: ""))
                 return
             }
-            guard let latest = Version(release.tag_name), !latest.isPrerelease,
+            guard let latest = Version(release.tag_name),
                   let current = Version(AppVersionUtil.currentVersion) else {
-                showMessage("Update check failed", detail: NSLocalizedString("Unable to compare release versions. Use numeric version tags such as v1.2.3.", comment: ""))
+                showMessage("Update check failed", detail: NSLocalizedString("Unable to compare release versions. Use numeric version tags such as v1.2.3 or v1.2.3-1.", comment: ""))
                 return
             }
             guard latest.isNewer(than: current) else {

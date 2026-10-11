@@ -42,9 +42,11 @@ The “Check Update” menu item checks the current fork's stable GitHub Release
 “Download” opens the browser to download `ClashX Meta.zip`. Quit the app, unzip and replace it, then reopen it.
 Updates are not installed automatically, and Actions artifacts are not treated as releases.
 
-GitHub Actions still uploads only an Artifact for branch builds and publishes a Release for `v*` tag builds.
+GitHub Actions still uploads only an Artifact for branch builds and publishes a Release for `v*` tag builds, marked **Pre-release** by default.
+After verification, edit the release on GitHub, clear the prerelease flag and set it as **Latest** to make it available to the update checker.
+The app uses GitHub's latest stable release endpoint and ignores drafts and prereleases. Numeric suffixes are revision numbers, ordered as `v1.4.46 < v1.4.46-1 < v1.4.46-2 < v1.4.47`; equal or older versions do not trigger an update prompt.
 No `ED_KEY` or update feed is needed. CI writes the current repository into `GitHubUpdateRepository`;
-for local builds, this value lives in `ClashX/Info.plist`. Use increasing numeric release tags such as `v1.3.1`.
+for local builds, this value lives in `ClashX/Info.plist`. Use increasing numeric release tags such as `v1.3.1` or `v1.3.1-1`.
 
 ## Config
 

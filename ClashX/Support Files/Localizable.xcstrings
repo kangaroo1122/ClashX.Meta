@@ -97,18 +97,18 @@
         }
       }
     },
-    "Unable to compare release versions. Use numeric version tags such as v1.2.3.": {
+    "Unable to compare release versions. Use numeric version tags such as v1.2.3 or v1.2.3-1.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法比较版本号。请使用 v1.2.3 这样的数字版本标签。"
+            "value": "无法比较版本号。请使用 v1.2.3 或 v1.2.3-1 这样的数字版本标签。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "無法比較版本號。請使用 v1.2.3 這樣的數字版本標籤。"
+            "value": "無法比較版本號。請使用 v1.2.3 或 v1.2.3-1 這樣的數字版本標籤。"
           }
         }
       }

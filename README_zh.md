@@ -40,9 +40,11 @@
 点击“下载”后由浏览器下载 `ClashX Meta.zip`；请先退出应用，再解压替换并重新打开。
 应用不会自动安装更新，也不会把 Actions Artifact 作为正式版本。
 
-GitHub Actions 保留分支构建只上传 Artifact、`v*` 标签构建发布 Release 的行为。
+GitHub Actions 保留分支构建只上传 Artifact、`v*` 标签构建发布 Release 的行为，标签构建默认标记为 **Pre-release**。
+验证后，在 GitHub 编辑该 Release，取消预发布标记并设为 **Latest**，客户端才会将其作为最新正式版检查。
+客户端使用 GitHub 的最新正式 Release 接口，忽略预发布和草稿。数字后缀表示修订号，例如 `v1.4.46 < v1.4.46-1 < v1.4.46-2 < v1.4.47`；同版本不会重复提示，也不会提示降级。
 更新功能无需 `ED_KEY` 或更新订阅文件；CI 会将当前仓库名称写入 `GitHubUpdateRepository`。
-本地构建时该字段位于 `ClashX/Info.plist`。正式版本请使用递增的数字标签，例如 `v1.3.1`。
+本地构建时该字段位于 `ClashX/Info.plist`。版本标签请使用递增的数字版本，例如 `v1.3.1` 或 `v1.3.1-1`。
 
 ## 配置
 
