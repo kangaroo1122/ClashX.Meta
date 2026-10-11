@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: xcode-27
+    permissions:
+      contents: write
     env:
       MIHOMO_TAG: v1.19.32
       GH_TOKEN: ${{ github.token }}
@@ -26,7 +28,13 @@ jobs:
     - name: build infos
       run: |
         /usr/libexec/PlistBuddy -c "Set CFBundleVersion $(git rev-list --count origin/master..origin/meta)" ClashX/Info.plist
-        /usr/libexec/PlistBuddy -c "Set CFBundleShortVersionString $(git describe --tags --abbrev=0)" ClashX/Info.plist
+        if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          version="$GITHUB_REF_NAME"
+        else
+          version=$(git describe --tags --abbrev=0)
+        fi
+        /usr/libexec/PlistBuddy -c "Set CFBundleShortVersionString $version" ClashX/Info.plist
+        /usr/libexec/PlistBuddy -c "Set GitHubUpdateRepository $GITHUB_REPOSITORY" ClashX/Info.plist
         /usr/libexec/PlistBuddy -c "Add coreVersion string $MIHOMO_TAG" ClashX/Info.plist
         /usr/libexec/PlistBuddy -c "Add gitBranch string $GITHUB_REF_NAME" ClashX/Info.plist
         /usr/libexec/PlistBuddy -c "Add gitCommit string ${GITHUB_SHA::7}" ClashX/Info.plist
@@ -53,59 +61,6 @@ jobs:
       with:
         name: "ClashX Meta.zip"
         path: "*.zip"
-
-    - name: load sparkle-repo
-      uses: actions/checkout@v6
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        ref: sparkle
-        path: 'sparkle-repo'
-
-    - name: preprocess sparkle-repo
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        rm -f sparkle-repo/*.delta
-        rm -rf sparkle-repo/old_updates
-
-        cd sparkle-repo
-        ruby <<'RUBY'
-        archives = Dir.glob('ClashX Meta *.zip')
-        sorted_archives = archives.sort_by do |archive|
-          version = archive[/ClashX Meta (.+)\.zip\z/, 1] || archive
-          Gem::Version.new(version.sub(/\Av/, ''))
-        end
-
-        if sorted_archives.length > 2
-          sorted_archives[0...-2].each { |archive| File.delete(archive) }
-        end
-        RUBY
-        cd ..
-
-    - name: update sparkle-repo
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-        cp "ClashX Meta.zip" "sparkle-repo/ClashX Meta $GITHUB_REF_NAME.zip"
-        
-        gh release download -R sparkle-project/Sparkle -p 'Sparkle-*.tar.xz' -D /tmp --clobber
-        tar -xJf /tmp/Sparkle-*.tar.xz -C /tmp --strip-components=1 bin/generate_appcast
-        
-        echo '${{ secrets.ED_KEY }}' | /tmp/bin/generate_appcast --maximum-deltas 2 --ed-key-file - sparkle-repo
-        
-        cd sparkle-repo
-        git checkout --orphan temp-sparkle
-
-        git add -A
-        git commit -m "Sparkle updates - $GITHUB_REF_NAME"
-      
-
-        git branch -D sparkle
-        git checkout -b sparkle
-        git branch -D temp-sparkle
-
-        git push --force-with-lease origin sparkle
 
     - name: upload build to github
       uses: softprops/action-gh-release@v3

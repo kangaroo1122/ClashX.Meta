@@ -34,6 +34,16 @@
 
 - 编译并运行。
 
+## 应用更新
+
+菜单中的“检查更新”会检查当前 fork 的 GitHub 正式 Release，并显示新版说明。
+点击“下载”后由浏览器下载 `ClashX Meta.zip`；请先退出应用，再解压替换并重新打开。
+应用不会自动安装更新，也不会把 Actions Artifact 作为正式版本。
+
+GitHub Actions 保留分支构建只上传 Artifact、`v*` 标签构建发布 Release 的行为。
+更新功能无需 `ED_KEY` 或更新订阅文件；CI 会将当前仓库名称写入 `GitHubUpdateRepository`。
+本地构建时该字段位于 `ClashX/Info.plist`。正式版本请使用递增的数字标签，例如 `v1.3.1`。
+
 ## 配置
 
 默认配置目录是 `$HOME/.config/clash.meta`

@@ -1,6 +1,262 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Checking for updates…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在检查更新…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在檢查更新…"
+          }
+        }
+      }
+    },
+    "Update check failed": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检查更新失败"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "檢查更新失敗"
+          }
+        }
+      }
+    },
+    "The update repository is not configured correctly.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新仓库配置不正确。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新儲存庫設定不正確。"
+          }
+        }
+      }
+    },
+    "No published release": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无正式发布版本"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚無正式發行版本"
+          }
+        }
+      }
+    },
+    "No public stable release was found in the update repository. Branch build artifacts are not releases.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新仓库中未找到公开的正式版本。分支构建产物不属于 Release。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新儲存庫中找不到公開的正式版本。分支建置產物不屬於 Release。"
+          }
+        }
+      }
+    },
+    "GitHub refused the request or its rate limit was reached. Please try again later.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub 拒绝了请求或已达到请求频率限制，请稍后重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub 拒絕了請求或已達到請求頻率限制，請稍後重試。"
+          }
+        }
+      }
+    },
+    "Unable to compare release versions. Use numeric version tags such as v1.2.3.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法比较版本号。请使用 v1.2.3 这样的数字版本标签。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法比較版本號。請使用 v1.2.3 這樣的數字版本標籤。"
+          }
+        }
+      }
+    },
+    "No newer release": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无更新版本"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫無更新版本"
+          }
+        }
+      }
+    },
+    "Current version: %@\nLatest release: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前版本：%@\n最新发布版本：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前版本：%@\n最新發行版本：%@"
+          }
+        }
+      }
+    },
+    "The release URL is invalid.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发布版本的链接无效。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "發行版本的連結無效。"
+          }
+        }
+      }
+    },
+    "New version available: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发现新版本：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "發現新版本：%@"
+          }
+        }
+      }
+    },
+    "Download the ZIP, quit ClashX Meta, then unzip and replace the app. Updates are not installed automatically.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载 ZIP 后，请先退出 ClashX Meta，再解压并替换应用。更新不会自动安装。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下載 ZIP 後，請先結束 ClashX Meta，再解壓縮並替換應用程式。更新不會自動安裝。"
+          }
+        }
+      }
+    },
+    "The release has no matching ZIP yet. Open the release page to check its downloads.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "该版本暂未提供匹配的 ZIP，请前往发布页面查看下载文件。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此版本尚未提供相符的 ZIP，請前往發行頁面查看下載檔案。"
+          }
+        }
+      }
+    },
+    "Open release page": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开发布页面"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟發行頁面"
+          }
+        }
+      }
+    },
+    "No release notes provided.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此版本未提供更新说明。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此版本未提供更新說明。"
+          }
+        }
+      }
+    },
+    "Unable to open the browser.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法打开浏览器。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法開啟瀏覽器。"
+          }
+        }
+      }
+    },
     "Follow configuration": {
       "localizations": {
         "zh-Hans": {

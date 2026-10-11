@@ -36,6 +36,16 @@ You can download from the [Release](https://github.com/MetaCubeX/Clash.Meta/rele
 
 - Build and run.
 
+## App updates
+
+The “Check Update” menu item checks the current fork's stable GitHub Releases and displays release notes.
+“Download” opens the browser to download `ClashX Meta.zip`. Quit the app, unzip and replace it, then reopen it.
+Updates are not installed automatically, and Actions artifacts are not treated as releases.
+
+GitHub Actions still uploads only an Artifact for branch builds and publishes a Release for `v*` tag builds.
+No `ED_KEY` or update feed is needed. CI writes the current repository into `GitHubUpdateRepository`;
+for local builds, this value lives in `ClashX/Info.plist`. Use increasing numeric release tags such as `v1.3.1`.
+
 ## Config
 
 The default configuration directory is `$HOME/.config/clash.meta`

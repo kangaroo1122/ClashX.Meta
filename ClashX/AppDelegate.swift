@@ -9,7 +9,6 @@
 import Cocoa
 import RxCocoa
 import RxSwift
-import Sparkle
 import SwiftyJSON
 import Yams
 
@@ -51,7 +50,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet var ruleProvidersMenuItem: NSMenuItem!
     @IBOutlet var snifferMenuItem: NSMenuItem!
     @IBOutlet var flushFakeipCacheMenuItem: NSMenuItem!
-    @IBOutlet var updaterController: SPUStandardUpdaterController?
 
     var disposeBag = DisposeBag()
     var statusItemView: StatusItemViewProtocol!
@@ -62,11 +60,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         Logger.log("applicationWillFinishLaunching")
 
-        #if DEBUG
-            updaterController?.updater.automaticallyChecksForUpdates = false
-            Logger.log("Sparkle auto checks disabled", level: .debug)
-        #endif
-
         signal(SIGPIPE, SIG_IGN)
         // crash recorder
         Task { await failLaunchProtect() }
@@ -75,6 +68,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                              andSelector: #selector(handleURL(event:reply:)),
                              forEventClass: AEEventClass(kInternetEventClass),
                              andEventID: AEEventID(kAEGetURL))
+    }
+
+    @MainActor
+    @IBAction func checkForUpdates(_ sender: NSMenuItem) {
+        Task { @MainActor in
+            guard !GitHubUpdateChecker.shared.isChecking else { return }
+            let title = sender.title
+            sender.title = NSLocalizedString("Checking for updates…", comment: "")
+            defer { sender.title = title }
+            await GitHubUpdateChecker.shared.checkForUpdates()
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
