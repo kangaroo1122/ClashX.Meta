@@ -1,6 +1,236 @@
 {
   "sourceLanguage": "en",
   "strings": {
+  "Download the installer with progress in the app. When it finishes, choose whether to open the DMG and quit ClashX Meta to install it.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Download the installer with progress in the app. When it finishes, choose whether to open the DMG and quit ClashX Meta to install it."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "在应用内下载安装包并查看进度。完成后可选择是否打开 DMG 并退出 ClashX Meta 进行安装。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "在應用程式內下載安裝包並查看進度。完成後可選擇是否開啟 DMG 並結束 ClashX Meta 進行安裝。"
+        }
+      }
+    }
+  },
+  "Unable to open installer": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to open installer"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法打开安装包"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "無法開啟安裝包"
+        }
+      }
+    }
+  },
+  "Show in Finder": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Show in Finder"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "在 Finder 中显示"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "在 Finder 中顯示"
+        }
+      }
+    }
+  },
+  "Install later": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Install later"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "稍后安装"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "稍後安裝"
+        }
+      }
+    }
+  },
+  "Install now": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Install now"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "立即安装"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "立即安裝"
+        }
+      }
+    }
+  },
+  "Install now opens the DMG and quits ClashX Meta. Drag the app into Applications to finish replacing it. The installer is saved at:": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Install now opens the DMG and quits ClashX Meta. Drag the app into Applications to finish replacing it. The installer is saved at:"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "立即安装将打开 DMG 并退出 ClashX Meta。请将应用拖入“应用程序”完成替换。安装包已保存至："
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "立即安裝將開啟 DMG 並結束 ClashX Meta。請將應用程式拖入「應用程式」完成替換。安裝包已儲存至："
+        }
+      }
+    }
+  },
+  "Installer download complete": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Installer download complete"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "安装包下载完成"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "安裝包下載完成"
+        }
+      }
+    }
+  },
+  "Connecting to download…": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Connecting to download…"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在连接下载…"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在連線下載…"
+        }
+      }
+    }
+  },
+  "Retry download": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Retry download"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "重新下载"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "重新下載"
+        }
+      }
+    }
+  },
+  "Installer download failed": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Installer download failed"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "安装包下载失败"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "安裝包下載失敗"
+        }
+      }
+    }
+  },
     "Download and open the DMG, quit ClashX Meta, then drag the app into Applications to replace it. Updates are not installed automatically.": {
       "localizations": {
         "zh-Hans": {
@@ -1350,6 +1580,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "下載"
+          }
+        }
+      }
+    },
+    "Download installer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download installer"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载安装包"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下載安裝包"
           }
         }
       }

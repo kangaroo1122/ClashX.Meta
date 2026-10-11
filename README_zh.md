@@ -37,7 +37,8 @@
 ## 应用更新
 
 菜单中的“检查更新”会检查当前 fork 的 GitHub 正式 Release，并显示新版说明。
-点击“下载”后由浏览器下载 `ClashX Meta.dmg`；打开磁盘映像，先退出应用，再将应用拖入映像内的 Applications 快捷方式并确认替换，完成后重新打开应用。
+点击“下载安装包”后，应用内显示 DMG 下载进度，支持取消和失败后重试。完成的安装包固定保存为 `~/Downloads/ClashX Meta/ClashX.Meta.dmg`，下载成功并校验大小后覆盖旧安装包；下载失败或取消时保留旧文件。
+下载完成可选择“立即安装”“稍后安装”或“在 Finder 中显示”。立即安装会打开 DMG，再正常退出应用；将应用拖入映像内的 Applications 快捷方式并确认替换，完成后重新打开应用。下载期间使用系统临时文件，保存时使用 `.download` 后缀，完成后改为 `.dmg`。
 分支构建的 Artifact 下载后为 `ClashX-Meta-artifact.zip`，解压即可得到 DMG；Release 附件直接提供 DMG。旧版 ZIP 附件仍可通过更新检查下载。
 应用不会自动安装更新，也不会把 Actions Artifact 作为正式版本。
 

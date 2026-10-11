@@ -45,11 +45,12 @@ class AppVersionUtil: NSObject {
     }
 }
 
-/// Checks published releases only. Downloading and replacing the app remain user actions.
+/// Checks published releases and downloads installers; app replacement remains a user action.
 @MainActor
 final class GitHubUpdateChecker {
     static let shared = GitHubUpdateChecker()
     private(set) var isChecking = false
+    private var installerDownload: InstallerDownloadController?
 
     private struct Release: Decodable {
         let tag_name: String
@@ -64,6 +65,7 @@ final class GitHubUpdateChecker {
         let name: String
         let browser_download_url: URL
         let state: String
+        let size: Int64
     }
 
     /// Numeric suffixes are fork revisions, not prerelease markers:
@@ -107,6 +109,11 @@ final class GitHubUpdateChecker {
     }
 
     func checkForUpdates() async {
+        if let installerDownload {
+            installerDownload.showWindow(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
         guard !isChecking else { return }
         isChecking = true
         defer { isChecking = false }
@@ -177,12 +184,12 @@ final class GitHubUpdateChecker {
         if let asset, zipNames.contains(asset.name) {
             alert.informativeText = NSLocalizedString("Download the ZIP, quit ClashX Meta, then unzip and replace the app. Updates are not installed automatically.", comment: "")
         } else {
-            alert.informativeText = NSLocalizedString("Download and open the DMG, quit ClashX Meta, then drag the app into Applications to replace it. Updates are not installed automatically.", comment: "")
+            alert.informativeText = NSLocalizedString("Download the installer with progress in the app. When it finishes, choose whether to open the DMG and quit ClashX Meta to install it.", comment: "")
         }
         if asset == nil {
             alert.informativeText += "\n" + NSLocalizedString("The release has no matching download yet. Open the release page to check its downloads.", comment: "")
         }
-        alert.addButton(withTitle: NSLocalizedString(asset == nil ? "Open release page" : "Download", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString(asset == nil ? "Open release page" : "Download installer", comment: ""))
         alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
         if asset != nil { alert.addButton(withTitle: NSLocalizedString("Open release page", comment: "")) }
 
@@ -205,7 +212,14 @@ final class GitHubUpdateChecker {
         NSApp.activate(ignoringOtherApps: true)
         let result = alert.runModal()
         if result == .alertFirstButtonReturn {
-            open(asset?.browser_download_url ?? release.html_url)
+            if let asset, dmgNames.contains(asset.name) {
+                let controller = InstallerDownloadController()
+                installerDownload = controller
+                controller.onFinish = { [weak self] in self?.installerDownload = nil }
+                controller.start(url: asset.browser_download_url, expectedSize: asset.size)
+            } else {
+                open(asset?.browser_download_url ?? release.html_url)
+            }
         } else if result == .alertThirdButtonReturn {
             open(release.html_url)
         }
@@ -229,6 +243,166 @@ final class GitHubUpdateChecker {
         alert.addButton(withTitle: NSLocalizedString("OK", comment: ""))
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
+    }
+}
+
+/// URLSession owns the temporary download; cancellation removes the partial transfer.
+private final class InstallerDownloadProgress: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
+    let update: @Sendable (Int64, Int64) -> Void
+
+    init(update: @escaping @Sendable (Int64, Int64) -> Void) {
+        self.update = update
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
+                    didWriteData bytesWritten: Int64, totalBytesWritten: Int64,
+                    totalBytesExpectedToWrite: Int64) {
+        update(totalBytesWritten, totalBytesExpectedToWrite)
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
+                    didFinishDownloadingTo location: URL) {}
+}
+
+@MainActor
+private final class InstallerDownloadController: NSWindowController {
+    var onFinish: (() -> Void)?
+    private var transfer: Task<Void, Never>?
+    private let progress = NSProgressIndicator(frame: NSRect(x: 24, y: 76, width: 392, height: 20))
+    private let detail = NSTextField(labelWithString: "")
+
+    init() {
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 440, height: 160),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        super.init(window: window)
+        window.title = NSLocalizedString("Download installer", comment: "")
+        window.center()
+        progress.style = .bar
+        progress.minValue = 0
+        progress.maxValue = 1
+        window.contentView?.addSubview(progress)
+        detail.frame = NSRect(x: 24, y: 106, width: 392, height: 24)
+        window.contentView?.addSubview(detail)
+        let cancel = NSButton(title: NSLocalizedString("Cancel", comment: ""), target: self, action: #selector(cancelDownload))
+        cancel.bezelStyle = .rounded
+        cancel.frame = NSRect(x: 312, y: 20, width: 104, height: 32)
+        window.contentView?.addSubview(cancel)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    func start(url: URL, expectedSize: Int64) {
+        showWindow(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        transfer = Task { [self] in
+            defer {
+                transfer = nil
+                close()
+                onFinish?()
+            }
+            while !Task.isCancelled {
+                do {
+                    let file = try await download(url: url, expectedSize: expectedSize)
+                    try Task.checkCancellation()
+                    window?.orderOut(nil)
+                    offerInstallation(file)
+                    return
+                } catch {
+                    if Task.isCancelled { return }
+                    let alert = NSAlert()
+                    alert.messageText = NSLocalizedString("Installer download failed", comment: "")
+                    alert.informativeText = error.localizedDescription
+                    alert.addButton(withTitle: NSLocalizedString("Retry download", comment: ""))
+                    alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
+                    guard alert.runModal() == .alertFirstButtonReturn else { return }
+                }
+            }
+        }
+    }
+
+    @objc private func cancelDownload() {
+        transfer?.cancel()
+    }
+
+    private func download(url: URL, expectedSize: Int64) async throws -> URL {
+        progress.isIndeterminate = true
+        progress.startAnimation(nil)
+        detail.stringValue = NSLocalizedString("Connecting to download…", comment: "")
+        let delegate = InstallerDownloadProgress { [weak self] received, expected in
+            Task { @MainActor [weak self] in
+                guard let self, self.transfer?.isCancelled == false else { return }
+                self.progress.isIndeterminate = expected <= 0
+                let receivedText = ByteCountFormatter.string(fromByteCount: received, countStyle: .file)
+                if expected > 0 {
+                    self.progress.stopAnimation(nil)
+                    self.progress.doubleValue = min(1, Double(received) / Double(expected))
+                    let total = ByteCountFormatter.string(fromByteCount: expected, countStyle: .file)
+                    self.detail.stringValue = "\(Int(self.progress.doubleValue * 100))% — \(receivedText) / \(total)"
+                } else {
+                    self.detail.stringValue = receivedText
+                }
+            }
+        }
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 60
+        config.timeoutIntervalForResource = 3600
+        let session = URLSession(configuration: config)
+        defer { session.invalidateAndCancel() }
+        var request = URLRequest(url: url)
+        request.setValue("ClashX-Meta", forHTTPHeaderField: "User-Agent")
+        let (temporary, response) = try await session.download(for: request, delegate: delegate)
+        defer { try? FileManager.default.removeItem(at: temporary) }
+        try Task.checkCancellation()
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200,
+              response.url?.scheme == "https" else { throw URLError(.badServerResponse) }
+        let manager = FileManager.default
+        let attributes = try manager.attributesOfItem(atPath: temporary.path)
+        guard expectedSize > 0,
+              (attributes[.size] as? NSNumber)?.int64Value == expectedSize else {
+            throw URLError(.cannotDecodeContentData)
+        }
+        let downloads = try manager.url(for: .downloadsDirectory, in: .userDomainMask,
+                                        appropriateFor: nil, create: true)
+        let directory = downloads.appendingPathComponent("ClashX Meta", isDirectory: true)
+        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
+        let destination = directory.appendingPathComponent("ClashX.Meta.dmg")
+        let staging = directory.appendingPathComponent(UUID().uuidString + ".download")
+        defer { try? manager.removeItem(at: staging) }
+        try manager.moveItem(at: temporary, to: staging)
+        try Task.checkCancellation()
+        if manager.fileExists(atPath: destination.path) {
+            _ = try manager.replaceItemAt(destination, withItemAt: staging)
+        } else {
+            try manager.moveItem(at: staging, to: destination)
+        }
+        return destination
+    }
+
+    private func offerInstallation(_ file: URL) {
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Installer download complete", comment: "")
+        alert.informativeText = NSLocalizedString("Install now opens the DMG and quits ClashX Meta. Drag the app into Applications to finish replacing it. The installer is saved at:", comment: "") + "\n" + file.path
+        alert.addButton(withTitle: NSLocalizedString("Install now", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Install later", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Show in Finder", comment: ""))
+        NSApp.activate(ignoringOtherApps: true)
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            if NSWorkspace.shared.open(file) {
+                NSApp.terminate(nil)
+            } else {
+                let failure = NSAlert()
+                failure.messageText = NSLocalizedString("Unable to open installer", comment: "")
+                failure.informativeText = file.path
+                failure.runModal()
+                NSWorkspace.shared.activateFileViewerSelecting([file])
+            }
+        case .alertThirdButtonReturn:
+            NSWorkspace.shared.activateFileViewerSelecting([file])
+        default:
+            break
+        }
     }
 }
 

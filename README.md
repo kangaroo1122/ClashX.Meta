@@ -39,7 +39,8 @@ You can download from the [Release](https://github.com/MetaCubeX/Clash.Meta/rele
 ## App updates
 
 The “Check Update” menu item checks the current fork's stable GitHub Releases and displays release notes.
-“Download” opens the browser to download `ClashX Meta.dmg`. Open the disk image, quit the app, drag it onto the image's Applications shortcut and confirm replacement, then reopen it.
+“Download installer” downloads the DMG in the app, with progress, cancellation and retry. Completed installers are saved as `~/Downloads/ClashX Meta/ClashX.Meta.dmg`, replacing the previous installer after a successful download and size check. Failed or cancelled downloads preserve the previous file.
+After downloading, choose “Install now”, “Install later”, or “Show in Finder”. Installing opens the DMG and quits the app through its normal cleanup flow. Drag the app onto the image's Applications shortcut and confirm replacement, then reopen it. Transfers use system temporary storage and a `.download` staging file before the completed `.dmg` is saved.
 Branch artifacts download as `ClashX-Meta-artifact.zip` containing the DMG; Release assets provide the DMG directly. The update checker also supports older ZIP releases.
 Updates are not installed automatically, and Actions artifacts are not treated as releases.
 
