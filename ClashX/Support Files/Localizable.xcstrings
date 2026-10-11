@@ -1,6 +1,22 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Download and open the DMG, quit ClashX Meta, then drag the app into Applications to replace it. Updates are not installed automatically.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下载并打开 DMG，先退出 ClashX Meta，再将应用拖入 Applications 并确认替换。更新不会自动安装。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下載並開啟 DMG，先結束 ClashX Meta，再將應用程式拖入 Applications 並確認替換。更新不會自動安裝。"
+          }
+        }
+      }
+    },
     "Checking for updates…": {
       "localizations": {
         "zh-Hans": {
@@ -193,18 +209,18 @@
         }
       }
     },
-    "The release has no matching ZIP yet. Open the release page to check its downloads.": {
+    "The release has no matching download yet. Open the release page to check its downloads.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "该版本暂未提供匹配的 ZIP，请前往发布页面查看下载文件。"
+            "value": "该版本暂未提供匹配的下载文件，请前往发布页面查看。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "此版本尚未提供相符的 ZIP，請前往發行頁面查看下載檔案。"
+            "value": "此版本尚未提供相符的下載檔案，請前往發行頁面查看。"
           }
         }
       }

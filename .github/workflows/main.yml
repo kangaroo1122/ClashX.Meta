@@ -51,16 +51,25 @@ jobs:
       run: |
         xcodebuild archive -project ClashX.xcodeproj -scheme ClashX\ Meta -archivePath archive/ClashX.xcarchive -showBuildTimingSummary -allowProvisioningUpdates
 
-    - name: create zip
-      run: ditto -c -k --sequesterRsrc --keepParent archive/ClashX.xcarchive/Products/Applications/ClashX\ Meta.app "ClashX Meta.zip"
+    - name: create dmg
+      run: |
+        staging_dir=$(mktemp -d "$RUNNER_TEMP/clashx-dmg.XXXXXX")
+        trap 'rm -rf "$staging_dir"' EXIT
+        ditto "archive/ClashX.xcarchive/Products/Applications/ClashX Meta.app" "$staging_dir/ClashX Meta.app"
+        ln -s /Applications "$staging_dir/Applications"
+        hdiutil create -volname "ClashX Meta" -srcfolder "$staging_dir" \
+          -fs HFS+ -format UDZO "ClashX Meta.dmg"
+        hdiutil verify "ClashX Meta.dmg"
 
 
     - name: upload Artifact
       uses: actions/upload-artifact@v7
       if: "!startsWith(github.ref, 'refs/tags/')"
       with:
-        name: "ClashX Meta.zip"
-        path: "*.zip"
+        name: "ClashX-Meta-artifact"
+        path: "ClashX Meta.dmg"
+        if-no-files-found: error
+        compression-level: 0
 
     - name: upload build to github
       uses: softprops/action-gh-release@v3
@@ -70,5 +79,6 @@ jobs:
       with:
         generate_release_notes: true
         prerelease: true
+        fail_on_unmatched_files: true
         files: |
-          ClashX Meta.zip
+          ClashX Meta.dmg

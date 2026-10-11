@@ -157,10 +157,13 @@ final class GitHubUpdateChecker {
     }
 
     private func present(_ release: Release, repository: String) {
-        let asset = release.assets.first {
-            $0.name == "ClashX Meta.zip" && $0.state == "uploaded"
+        // Prefer the disk image, but keep downloads working for older ZIP releases.
+        let downloadableAssets = release.assets.filter {
+            $0.state == "uploaded"
                 && isGitHubURL($0.browser_download_url, repository: repository, pathPrefix: "/releases/download/")
         }
+        let asset = downloadableAssets.first { $0.name == "ClashX Meta.dmg" }
+            ?? downloadableAssets.first { $0.name == "ClashX Meta.zip" }
         guard isGitHubURL(release.html_url, repository: repository, pathPrefix: "/releases/") else {
             showMessage("Update check failed", detail: NSLocalizedString("The release URL is invalid.", comment: ""))
             return
@@ -168,9 +171,13 @@ final class GitHubUpdateChecker {
 
         let alert = NSAlert()
         alert.messageText = String(format: NSLocalizedString("New version available: %@", comment: ""), release.tag_name)
-        alert.informativeText = NSLocalizedString("Download the ZIP, quit ClashX Meta, then unzip and replace the app. Updates are not installed automatically.", comment: "")
+        if asset?.name == "ClashX Meta.zip" {
+            alert.informativeText = NSLocalizedString("Download the ZIP, quit ClashX Meta, then unzip and replace the app. Updates are not installed automatically.", comment: "")
+        } else {
+            alert.informativeText = NSLocalizedString("Download and open the DMG, quit ClashX Meta, then drag the app into Applications to replace it. Updates are not installed automatically.", comment: "")
+        }
         if asset == nil {
-            alert.informativeText += "\n" + NSLocalizedString("The release has no matching ZIP yet. Open the release page to check its downloads.", comment: "")
+            alert.informativeText += "\n" + NSLocalizedString("The release has no matching download yet. Open the release page to check its downloads.", comment: "")
         }
         alert.addButton(withTitle: NSLocalizedString(asset == nil ? "Open release page" : "Download", comment: ""))
         alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))

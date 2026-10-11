@@ -39,7 +39,8 @@ You can download from the [Release](https://github.com/MetaCubeX/Clash.Meta/rele
 ## App updates
 
 The “Check Update” menu item checks the current fork's stable GitHub Releases and displays release notes.
-“Download” opens the browser to download `ClashX Meta.zip`. Quit the app, unzip and replace it, then reopen it.
+“Download” opens the browser to download `ClashX Meta.dmg`. Open the disk image, quit the app, drag it onto the image's Applications shortcut and confirm replacement, then reopen it.
+Branch artifacts download as `ClashX-Meta-artifact.zip` containing the DMG; Release assets provide the DMG directly. The update checker also supports older ZIP releases.
 Updates are not installed automatically, and Actions artifacts are not treated as releases.
 
 GitHub Actions still uploads only an Artifact for branch builds and publishes a Release for `v*` tag builds, marked **Pre-release** by default.

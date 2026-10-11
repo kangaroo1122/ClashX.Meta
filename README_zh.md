@@ -37,7 +37,8 @@
 ## 应用更新
 
 菜单中的“检查更新”会检查当前 fork 的 GitHub 正式 Release，并显示新版说明。
-点击“下载”后由浏览器下载 `ClashX Meta.zip`；请先退出应用，再解压替换并重新打开。
+点击“下载”后由浏览器下载 `ClashX Meta.dmg`；打开磁盘映像，先退出应用，再将应用拖入映像内的 Applications 快捷方式并确认替换，完成后重新打开应用。
+分支构建的 Artifact 下载后为 `ClashX-Meta-artifact.zip`，解压即可得到 DMG；Release 附件直接提供 DMG。旧版 ZIP 附件仍可通过更新检查下载。
 应用不会自动安装更新，也不会把 Actions Artifact 作为正式版本。
 
 GitHub Actions 保留分支构建只上传 Artifact、`v*` 标签构建发布 Release 的行为，标签构建默认标记为 **Pre-release**。
