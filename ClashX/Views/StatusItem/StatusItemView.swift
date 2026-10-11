@@ -23,6 +23,7 @@ final class StatusItemView: NSView, StatusItemViewProtocol {
 
     private static let horizontalPadding: CGFloat = 3
     private static let iconSize: CGFloat = 16
+    private static let iconTextSpacing: CGFloat = 2
     private static let itemHeight: CGFloat = 22
     private let textFont = StatusItemTool.font
     private lazy var iconImage: NSImage = StatusItemTool.menuImage
@@ -70,7 +71,7 @@ final class StatusItemView: NSView, StatusItemViewProtocol {
     override init(frame frameRect: NSRect) {
         let fixedTextWidth = Self.measuredFixedTextWidth()
         self.fixedTextWidth = fixedTextWidth
-        self.statusItemLengthWithSpeed = Self.horizontalPadding * 2 + Self.iconSize + fixedTextWidth
+        self.statusItemLengthWithSpeed = Self.horizontalPadding * 2 + Self.iconSize + Self.iconTextSpacing + fixedTextWidth
         self.statusItemLengthWithoutSpeed = Self.horizontalPadding * 2 + Self.iconSize
         super.init(frame: frameRect)
     }
@@ -108,7 +109,8 @@ final class StatusItemView: NSView, StatusItemViewProtocol {
         guard showSpeed else { return }
 
         let style = NSMutableParagraphStyle()
-        style.alignment = .right
+        // Keep short rates close to the icon without resizing the menu bar item.
+        style.alignment = .left
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: textFont,
@@ -120,8 +122,7 @@ final class StatusItemView: NSView, StatusItemViewProtocol {
         let downAttributed = NSAttributedString(string: downText, attributes: attributes)
         let textWidth = fixedTextWidth
         let textHeight = measuredTextHeight
-        let textRight = bounds.width - Self.horizontalPadding
-        let textX = textRight - textWidth
+        let textX = iconRect.maxX + Self.iconTextSpacing
         let upRect = CGRect(x: textX, y: 12, width: textWidth, height: textHeight)
         let downRect = CGRect(x: textX, y: 2, width: textWidth, height: textHeight)
 

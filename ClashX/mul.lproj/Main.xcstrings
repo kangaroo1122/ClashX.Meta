@@ -434,13 +434,13 @@
       }
     },
     "9ox-Fc-Wk3.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"https://github.com/MetaCubeX/ClashX.Meta\"; ObjectID = \"9ox-Fc-Wk3\"; Note = \"#bc-ignore!\";",
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"https://github.com/kangaroo1122/ClashX.Meta\"; ObjectID = \"9ox-Fc-Wk3\"; Note = \"#bc-ignore!\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "https://github.com/MetaCubeX/ClashX.Meta"
+            "value" : "https://github.com/kangaroo1122/ClashX.Meta"
           }
         }
       }
