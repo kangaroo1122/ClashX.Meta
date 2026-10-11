@@ -141,7 +141,6 @@ class MetaPrefsViewController: NSViewController {
 		tunDNSTextField.placeholderString = ConfigManager.defaultTunDNS
 		tunDNSTextField.stringValue = ConfigManager.metaTunDNS
 		tunDNSTextField.delegate = self
-		setupTunStackPicker()
 		
 		// Dashboard
 		initDashboardButtons()
@@ -155,6 +154,7 @@ class MetaPrefsViewController: NSViewController {
 		prefsSnapshot = takePrefsSnapshot()
 		versionSnapshot = alphaVersionTextField.stringValue
 		restartTextField.isHidden = true
+        setupTunStackPicker()
     }
 
     private func setupTunStackPicker() {
@@ -168,13 +168,20 @@ class MetaPrefsViewController: NSViewController {
             .forEach { $0.isActive = false }
 
         let label = NSTextField(labelWithString: NSLocalizedString("TUN IP Stack", comment: ""))
-        let control = NSHostingView(rootView: TunStackSettingsView())
+        let control = NSHostingView(rootView: TunStackSettingsView()
+            .frame(width: 270, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true))
         control.translatesAutoresizingMaskIntoConstraints = false
+        control.setContentHuggingPriority(.required, for: .vertical)
+        control.setContentCompressionResistancePriority(.required, for: .vertical)
         let row = grid.addRow(with: [label, control])
         row.yPlacement = .top
         control.widthAnchor.constraint(equalToConstant: 270).isActive = true
-        // Give the additional row room in the existing preferences tab.
-        view.setFrameSize(NSSize(width: view.frame.width, height: view.frame.height + 140))
+        // Keep rows at their content height instead of stretching them to fill
+        // an arbitrarily enlarged preferences window.
+        grid.setContentHuggingPriority(.required, for: .vertical)
+        view.layoutSubtreeIfNeeded()
+        view.setFrameSize(NSSize(width: view.frame.width, height: view.fittingSize.height))
         preferredContentSize = view.frame.size
     }
 	
