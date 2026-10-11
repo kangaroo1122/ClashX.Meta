@@ -162,8 +162,11 @@ final class GitHubUpdateChecker {
             $0.state == "uploaded"
                 && isGitHubURL($0.browser_download_url, repository: repository, pathPrefix: "/releases/download/")
         }
-        let asset = downloadableAssets.first { $0.name == "ClashX Meta.dmg" }
-            ?? downloadableAssets.first { $0.name == "ClashX Meta.zip" }
+        // GitHub may replace spaces with dots in uploaded asset names.
+        let dmgNames = ["ClashX Meta.dmg", "ClashX.Meta.dmg"]
+        let zipNames = ["ClashX Meta.zip", "ClashX.Meta.zip"]
+        let asset = downloadableAssets.first { dmgNames.contains($0.name) }
+            ?? downloadableAssets.first { zipNames.contains($0.name) }
         guard isGitHubURL(release.html_url, repository: repository, pathPrefix: "/releases/") else {
             showMessage("Update check failed", detail: NSLocalizedString("The release URL is invalid.", comment: ""))
             return
@@ -171,7 +174,7 @@ final class GitHubUpdateChecker {
 
         let alert = NSAlert()
         alert.messageText = String(format: NSLocalizedString("New version available: %@", comment: ""), release.tag_name)
-        if asset?.name == "ClashX Meta.zip" {
+        if let asset, zipNames.contains(asset.name) {
             alert.informativeText = NSLocalizedString("Download the ZIP, quit ClashX Meta, then unzip and replace the app. Updates are not installed automatically.", comment: "")
         } else {
             alert.informativeText = NSLocalizedString("Download and open the DMG, quit ClashX Meta, then drag the app into Applications to replace it. Updates are not installed automatically.", comment: "")
