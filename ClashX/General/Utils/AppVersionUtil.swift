@@ -246,11 +246,40 @@ final class GitHubUpdateChecker {
     }
 }
 
-/// URLSession owns the temporary download; cancellation removes the partial transfer.
+/// Synchronizes Swift task cancellation with creation of the URLSession task.
+private final class InstallerDownloadCancellation: @unchecked Sendable {
+    private let lock = NSLock()
+    private var task: URLSessionDownloadTask?
+    private var cancelled = false
+
+    func start(_ task: URLSessionDownloadTask) {
+        lock.lock()
+        self.task = task
+        let shouldCancel = cancelled
+        lock.unlock()
+        if shouldCancel { task.cancel() }
+        task.resume()
+    }
+
+    func cancel() {
+        lock.lock()
+        cancelled = true
+        let task = task
+        lock.unlock()
+        task?.cancel()
+    }
+}
+
+/// One delegate per transfer. Mutable result state is used only on the session's
+/// serial delegate queue; the continuation is resumed once, from didComplete.
 private final class InstallerDownloadProgress: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
     let update: @Sendable (Int64, Int64) -> Void
+    private let continuation: CheckedContinuation<(URL, URLResponse), Error>
+    private var result: Result<(URL, URLResponse), Error>?
 
-    init(update: @escaping @Sendable (Int64, Int64) -> Void) {
+    init(continuation: CheckedContinuation<(URL, URLResponse), Error>,
+         update: @escaping @Sendable (Int64, Int64) -> Void) {
+        self.continuation = continuation
         self.update = update
     }
 
@@ -261,7 +290,32 @@ private final class InstallerDownloadProgress: NSObject, URLSessionDownloadDeleg
     }
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
-                    didFinishDownloadingTo location: URL) {}
+                    didFinishDownloadingTo location: URL) {
+        // URLSession deletes location after this callback; preserve it before
+        // resuming the caller on the main actor.
+        let saved = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString + ".download")
+        do {
+            guard let response = downloadTask.response else { throw URLError(.badServerResponse) }
+            try FileManager.default.moveItem(at: location, to: saved)
+            result = .success((saved, response))
+        } catch {
+            try? FileManager.default.removeItem(at: saved)
+            result = .failure(error)
+        }
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        defer { session.finishTasksAndInvalidate() }
+        if let error {
+            if case let .success((file, _)) = result {
+                try? FileManager.default.removeItem(at: file)
+            }
+            continuation.resume(throwing: error)
+        } else {
+            continuation.resume(with: result ?? .failure(URLError(.unknown)))
+        }
+    }
 }
 
 @MainActor
@@ -334,7 +388,7 @@ private final class InstallerDownloadController: NSWindowController {
         progress.isIndeterminate = true
         progress.startAnimation(nil)
         detail.stringValue = NSLocalizedString("Connecting to download…", comment: "")
-        let delegate = InstallerDownloadProgress { [weak self] received, expected in
+        let update: @Sendable (Int64, Int64) -> Void = { [weak self] received, expected in
             Task { @MainActor [weak self] in
                 guard let self, self.transfer?.isCancelled == false,
                       self.downloadAttempt == attempt else { return }
@@ -354,13 +408,20 @@ private final class InstallerDownloadController: NSWindowController {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 60
         config.timeoutIntervalForResource = 3600
-        // Download progress belongs to the session's download delegate. The async
-        // method's delegate parameter is for task-level events only.
-        let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
-        defer { session.invalidateAndCancel() }
         var request = URLRequest(url: url)
         request.setValue("ClashX-Meta", forHTTPHeaderField: "User-Agent")
-        let (temporary, response) = try await session.download(for: request)
+        let cancellation = InstallerDownloadCancellation()
+        let (temporary, response) = try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                let delegate = InstallerDownloadProgress(continuation: continuation, update: update)
+                let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
+                // No async download wrapper or completion handler: progress and
+                // completion both go through URLSessionDownloadDelegate.
+                cancellation.start(session.downloadTask(with: request))
+            }
+        } onCancel: {
+            cancellation.cancel()
+        }
         defer { try? FileManager.default.removeItem(at: temporary) }
         try Task.checkCancellation()
         guard let http = response as? HTTPURLResponse, http.statusCode == 200,
