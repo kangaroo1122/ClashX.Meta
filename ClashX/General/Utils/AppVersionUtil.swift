@@ -268,6 +268,7 @@ private final class InstallerDownloadProgress: NSObject, URLSessionDownloadDeleg
 private final class InstallerDownloadController: NSWindowController {
     var onFinish: (() -> Void)?
     private var transfer: Task<Void, Never>?
+    private var downloadAttempt: UUID?
     private let progress = NSProgressIndicator(frame: NSRect(x: 24, y: 76, width: 392, height: 20))
     private let detail = NSTextField(labelWithString: "")
 
@@ -326,18 +327,24 @@ private final class InstallerDownloadController: NSWindowController {
     }
 
     private func download(url: URL, expectedSize: Int64) async throws -> URL {
+        let attempt = UUID()
+        downloadAttempt = attempt
+        defer { downloadAttempt = nil }
+        progress.doubleValue = 0
         progress.isIndeterminate = true
         progress.startAnimation(nil)
         detail.stringValue = NSLocalizedString("Connecting to download…", comment: "")
         let delegate = InstallerDownloadProgress { [weak self] received, expected in
             Task { @MainActor [weak self] in
-                guard let self, self.transfer?.isCancelled == false else { return }
-                self.progress.isIndeterminate = expected <= 0
+                guard let self, self.transfer?.isCancelled == false,
+                      self.downloadAttempt == attempt else { return }
+                let totalBytes = expected > 0 ? expected : expectedSize
+                self.progress.isIndeterminate = totalBytes <= 0
                 let receivedText = ByteCountFormatter.string(fromByteCount: received, countStyle: .file)
-                if expected > 0 {
+                if totalBytes > 0 {
                     self.progress.stopAnimation(nil)
-                    self.progress.doubleValue = min(1, Double(received) / Double(expected))
-                    let total = ByteCountFormatter.string(fromByteCount: expected, countStyle: .file)
+                    self.progress.doubleValue = min(1, Double(received) / Double(totalBytes))
+                    let total = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
                     self.detail.stringValue = "\(Int(self.progress.doubleValue * 100))% — \(receivedText) / \(total)"
                 } else {
                     self.detail.stringValue = receivedText
@@ -347,11 +354,13 @@ private final class InstallerDownloadController: NSWindowController {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 60
         config.timeoutIntervalForResource = 3600
-        let session = URLSession(configuration: config)
+        // Download progress belongs to the session's download delegate. The async
+        // method's delegate parameter is for task-level events only.
+        let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
         defer { session.invalidateAndCancel() }
         var request = URLRequest(url: url)
         request.setValue("ClashX-Meta", forHTTPHeaderField: "User-Agent")
-        let (temporary, response) = try await session.download(for: request, delegate: delegate)
+        let (temporary, response) = try await session.download(for: request)
         defer { try? FileManager.default.removeItem(at: temporary) }
         try Task.checkCancellation()
         guard let http = response as? HTTPURLResponse, http.statusCode == 200,
