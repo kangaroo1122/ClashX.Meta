@@ -364,10 +364,8 @@ private final class InstallerDownloadController: NSWindowController {
         }
         let downloads = try manager.url(for: .downloadsDirectory, in: .userDomainMask,
                                         appropriateFor: nil, create: true)
-        let directory = downloads.appendingPathComponent("ClashX Meta", isDirectory: true)
-        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
-        let destination = directory.appendingPathComponent("ClashX.Meta.dmg")
-        let staging = directory.appendingPathComponent(UUID().uuidString + ".download")
+        let destination = downloads.appendingPathComponent("ClashX.Meta.dmg")
+        let staging = downloads.appendingPathComponent(UUID().uuidString + ".download")
         defer { try? manager.removeItem(at: staging) }
         try manager.moveItem(at: temporary, to: staging)
         try Task.checkCancellation()
