@@ -117,6 +117,7 @@ class RemoteControlManager {
             ConfigManager.shared.overrideSecret = nil
         }
         ClashProxy.cleanCache()
+        NotificationCenter.default.post(name: TunStackSettings.remoteControlChanged, object: nil)
         Task { @MainActor in
             ConfigReloadManager.shared.resetStreamApi()
             await ConfigReloadManager.shared.syncConfig()

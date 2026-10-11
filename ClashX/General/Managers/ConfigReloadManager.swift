@@ -86,7 +86,7 @@ final class ConfigReloadManager {
         return nil
     }
 
-    func handleClashConfigUpdated(isInitialApply: Bool = false) async {
+    func handleClashConfigUpdated(isInitialApply: Bool = false, preserveProxyState: Bool = false) async {
         if isInitialApply {
             ConfigManager.shared.kernelState = .reloadingConfig
         }
@@ -96,11 +96,15 @@ final class ConfigReloadManager {
             ConfigManager.shared.currentConfig = currentConfig
         }
 
-        await ProxyManager.shared.reconcileState()
+        if preserveProxyState {
+            await ProxyManager.shared.syncTunState()
+        } else {
+            await ProxyManager.shared.reconcileState()
+        }
 
         if isInitialApply {
             await SSIDSuspendTool.shared.setup()
-        } else {
+        } else if !preserveProxyState {
             await SSIDSuspendTool.shared.update()
         }
 

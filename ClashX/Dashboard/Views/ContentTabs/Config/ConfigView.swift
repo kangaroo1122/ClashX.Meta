@@ -19,7 +19,6 @@ struct ConfigView: View {
 	@State var ipv6: Bool = false
 	
 	@State var enableTUNDevice: Bool = false
-	@State var tunIPStack: String = "System"
 	@State var deviceName: String = "utun9"
 	@State var interfaceName: String = "en0"
 	
@@ -83,7 +82,6 @@ struct ConfigView: View {
 		ipv6 = config.ipv6
 
 		enableTUNDevice = config.tun.enable
-		tunIPStack = config.tun.stack
 		deviceName = config.tun.device
 		interfaceName = config.interfaceName
 
@@ -195,15 +193,7 @@ struct ConfigView: View {
 			
 			
 			ConfigItemView(name: "TUN IP Stack") {
-//				Picker("", selection: $tunIPStack) {
-//					ForEach(["gVisor", "System", "LWIP"], id: \.self) {
-//						Text($0)
-//					}
-//				}
-//				.pickerStyle(.menu)
-				
-				Text(tunIPStack)
-					.font(.system(size: 17))
+				TunStackSettingsView()
 			}
 			
 			
@@ -284,6 +274,55 @@ struct ConfigView: View {
 			}
 		}
 	}
+}
+
+@MainActor
+struct TunStackSettingsView: View {
+    @ObservedObject private var settings = TunStackSettings.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if !settings.isRemote {
+                Picker("TUN IP Stack", selection: Binding(
+                    get: { settings.selection },
+                    set: { value in Task { await settings.select(value) } }
+                )) {
+                    ForEach(TunStack.allCases, id: \.self) { stack in
+                        Text(stack.title).tag(stack)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .disabled(!settings.canEdit)
+            }
+
+            if settings.isApplying {
+                Text("Applying…")
+                    .font(.caption)
+            } else if let stack = settings.currentStack {
+                Text(String(format: NSLocalizedString("Current stack: %@", comment: ""), TunStack(rawValue: stack.lowercased())?.title ?? stack))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Text(LocalizedStringKey(settings.isRemote
+                 ? "TUN stack is read-only in remote control mode."
+                 : "Overrides all local configurations. Switching may briefly interrupt connections; when TUN is off, it stays off."))
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let error = settings.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .lineLimit(2)
+                    .help(error)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 }
 
 //struct ConfigView_Previews: PreviewProvider {

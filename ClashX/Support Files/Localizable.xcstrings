@@ -1,6 +1,166 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Follow configuration": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟随配置文件"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跟隨設定檔"
+          }
+        }
+      }
+    },
+    "Applying…": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在应用…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在套用…"
+          }
+        }
+      }
+    },
+    "Current stack: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前协议栈：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前協定堆疊：%@"
+          }
+        }
+      }
+    },
+    "TUN stack is read-only in remote control mode.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "远程控制模式下，TUN 协议栈为只读。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "遠端控制模式下，TUN 協定堆疊為唯讀。"
+          }
+        }
+      }
+    },
+    "Overrides all local configurations. Switching may briefly interrupt connections; when TUN is off, it stays off.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "覆盖所有本地配置。切换可能短暂中断连接；不会自动开启 TUN。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "覆寫所有本機設定。切換可能短暫中斷連線；不會自動開啟 TUN。"
+          }
+        }
+      }
+    },
+    "Unable to prepare TUN configuration.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法准备 TUN 配置。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法準備 TUN 設定。"
+          }
+        }
+      }
+    },
+    "Configuration changed. Please try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配置已发生变化，请重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定已變更，請重試。"
+          }
+        }
+      }
+    },
+    "Unable to restore TUN configuration:": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法恢复 TUN 配置："
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法還原 TUN 設定："
+          }
+        }
+      }
+    },
+    "The core did not apply the selected TUN stack.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内核未应用所选的 TUN 协议栈。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "核心未套用所選的 TUN 協定堆疊。"
+          }
+        }
+      }
+    },
+    "Unable to verify the TUN configuration.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法确认 TUN 配置是否生效。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法確認 TUN 設定是否生效。"
+          }
+        }
+      }
+    },
     "": {
       "localizations": {
         "zh-Hans": {

@@ -7,6 +7,7 @@
 
 import Cocoa
 import Network
+import SwiftUI
 
 class MetaPrefsViewController: NSViewController {
 	// Meta Setting
@@ -140,6 +141,7 @@ class MetaPrefsViewController: NSViewController {
 		tunDNSTextField.placeholderString = ConfigManager.defaultTunDNS
 		tunDNSTextField.stringValue = ConfigManager.metaTunDNS
 		tunDNSTextField.delegate = self
+		setupTunStackPicker()
 		
 		// Dashboard
 		initDashboardButtons()
@@ -153,6 +155,27 @@ class MetaPrefsViewController: NSViewController {
 		prefsSnapshot = takePrefsSnapshot()
 		versionSnapshot = alphaVersionTextField.stringValue
 		restartTextField.isHidden = true
+    }
+
+    private func setupTunStackPicker() {
+        // Reuse the exact same control/state as the native dashboard.
+        var ancestor = tunDNSTextField.superview
+        while ancestor != nil && !(ancestor is NSGridView) {
+            ancestor = ancestor?.superview
+        }
+        guard let grid = ancestor as? NSGridView else { return }
+        grid.constraints.filter { $0.firstAttribute == .height && $0.secondItem == nil }
+            .forEach { $0.isActive = false }
+
+        let label = NSTextField(labelWithString: NSLocalizedString("TUN IP Stack", comment: ""))
+        let control = NSHostingView(rootView: TunStackSettingsView())
+        control.translatesAutoresizingMaskIntoConstraints = false
+        let row = grid.addRow(with: [label, control])
+        row.yPlacement = .top
+        control.widthAnchor.constraint(equalToConstant: 270).isActive = true
+        // Give the additional row room in the existing preferences tab.
+        view.setFrameSize(NSSize(width: view.frame.width, height: view.frame.height + 140))
+        preferredContentSize = view.frame.size
     }
 	
 	func initDashboardButtons() {
