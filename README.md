@@ -101,3 +101,5 @@ Note: This is strongly discouraged, because it may prevent many important error 
 ## Global hotkeys
 - Customize hotkeys for corresponding features in the menu bar -> Config -> More Config. (Requires version v1.2.6 or later)
 - Set via AppleScript, see [Global Hotkeys](Shortcuts.md)
+
+TUN defaults to the System stack. Existing explicit stack selections are preserved, and other stacks or “Follow configuration” remain available in Meta settings. Runtime profiles set `tun.inet6-address: []` for IPv4-only TUN operation, matching the observed ClashX Pro setup without disabling macOS IPv6 or overriding profile DNS settings. Quit the old app before launching the update and re-enabling TUN to release the old interface and routes.

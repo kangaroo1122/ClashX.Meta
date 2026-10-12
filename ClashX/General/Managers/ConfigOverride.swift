@@ -98,13 +98,14 @@ final class ConfigOverride {
     }
 
     var tunStack: TunStack {
-        get { TunStack(rawValue: UserDefaults.standard.string(forKey: "overrideTunStack") ?? "") ?? .followConfig }
+        get {
+            guard let saved = UserDefaults.standard.string(forKey: "overrideTunStack") else { return .system }
+            return TunStack(rawValue: saved) ?? .system
+        }
         set {
-            if newValue == .followConfig {
-                UserDefaults.standard.removeObject(forKey: "overrideTunStack")
-            } else {
-                UserDefaults.standard.set(newValue.rawValue, forKey: "overrideTunStack")
-            }
+            // Persist the empty string too: explicit "follow configuration"
+            // must remain distinct from the default System selection.
+            UserDefaults.standard.set(newValue.rawValue, forKey: "overrideTunStack")
         }
     }
 
@@ -202,6 +203,10 @@ final class ConfigOverride {
                 ],
             ]
         }
+        // Match ClashX Pro's IPv4-only TUN. Omitting this field lets Mihomo
+        // install its default IPv6 address and routes even with dns.ipv6=false.
+        // Keep the system's IPv6 and the profile's DNS settings unchanged.
+        yaml["tun"]!["inet6-address"] = .sequence(.init([]))
     }
 
     private func readFileString(_ path: String) -> String? {
