@@ -1,6 +1,144 @@
 {
   "sourceLanguage": "en",
   "strings": {
+  "Used only when the configuration has no DNS section. Separate from TUN DNS. Saved changes apply the next time a local configuration is loaded.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Used only when the configuration has no DNS section. Separate from TUN DNS. Saved changes apply the next time a local configuration is loaded."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "仅当配置没有 DNS 设置时使用，与 TUN DNS 独立。保存后，下次加载本地配置时生效。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "僅當設定沒有 DNS 設定時使用，與 TUN DNS 獨立。儲存後，下次載入本機設定時生效。"
+        }
+      }
+    }
+  },
+  "Enter at least one valid HTTPS DNS address.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter at least one valid HTTPS DNS address."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请至少填写一个有效的 HTTPS DNS 地址。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "請至少填寫一個有效的 HTTPS DNS 位址。"
+        }
+      }
+    }
+  },
+  "Restore default DNS": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Restore default DNS"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "恢复默认"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "恢復預設"
+        }
+      }
+    }
+  },
+  "Save fallback DNS": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Save fallback DNS"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "保存"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "儲存"
+        }
+      }
+    }
+  },
+  "DNS over HTTPS addresses, one per line.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS over HTTPS addresses, one per line."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS over HTTPS 地址，每行一个。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS over HTTPS 位址，每行一個。"
+        }
+      }
+    }
+  },
+  "Fallback DNS": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Fallback DNS"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "备用 DNS"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "備用 DNS"
+        }
+      }
+    }
+  },
   "Download the installer with progress in the app. When it finishes, choose whether to open the DMG and quit ClashX Meta to install it.": {
     "extractionState": "manual",
     "localizations": {

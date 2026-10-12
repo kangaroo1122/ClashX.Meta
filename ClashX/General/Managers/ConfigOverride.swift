@@ -29,6 +29,30 @@ final class ConfigOverride {
 
     private init() {}
 
+    static let defaultFallbackDNS = "https://dns.alidns.com/dns-query"
+
+    var fallbackDNSServers: [String] {
+        let saved = UserDefaults.standard.stringArray(forKey: "fallbackDNSServers") ?? []
+        return saved.isEmpty ? [Self.defaultFallbackDNS] : saved
+    }
+
+    static func parseFallbackDNS(_ text: String) -> [String]? {
+        let addresses = text.components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !addresses.isEmpty, addresses.allSatisfy({ address in
+            guard !address.contains(where: { $0.isWhitespace }),
+                  let url = URLComponents(string: address) else { return false }
+            return url.scheme?.lowercased() == "https" && !(url.host ?? "").isEmpty
+                && url.user == nil && url.password == nil && url.fragment == nil
+        }) else { return nil }
+        return addresses.reduce(into: []) { if !$0.contains($1) { $0.append($1) } }
+    }
+
+    func saveFallbackDNS(_ addresses: [String]) {
+        UserDefaults.standard.set(addresses, forKey: "fallbackDNSServers")
+    }
+
     // MARK: - Always Override
 
     var logLevel: ClashLogLevel {
@@ -111,12 +135,26 @@ final class ConfigOverride {
         yaml["mode"] = .init(mode.rawValue)
         yaml["log-level"] = .init(logLevel.rawValue)
 
+        applyDNSFallback(&yaml)
         applySnifferOverride(&yaml)
         applyTunOverride(&yaml)
         let selectedStack = stack ?? tunStack
         if selectedStack != .followConfig {
             yaml["tun"]!["stack"] = .init(selectedStack.rawValue)
         }
+    }
+
+    private func applyDNSFallback(_ yaml: inout Node) {
+        // Only supply a missing section. Preserve explicit DNS settings,
+        // including enable: false, empty mappings and null values.
+        guard yaml["dns"] == nil else { return }
+        yaml["dns"] = [
+            "enable": "true",
+            "ipv6": "false",
+            "enhanced-mode": "fake-ip",
+            "fake-ip-range": "198.18.0.1/16",
+            "nameserver": .sequence(.init(fallbackDNSServers.map { Node($0) })),
+        ]
     }
 
     private func applySnifferOverride(_ yaml: inout Node) {

@@ -314,19 +314,19 @@
       }
     },
     "N2a-mI-oqd.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Tun DNS:\"; ObjectID = \"N2a-mI-oqd\";",
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"TUN DNS:\"; ObjectID = \"N2a-mI-oqd\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Tun DNS:"
+            "value" : "TUN DNS:"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tun DNS："
+            "value" : "TUN DNS："
           }
         },
         "zh-Hant" : {

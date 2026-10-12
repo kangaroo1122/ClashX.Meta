@@ -167,6 +167,13 @@ class MetaPrefsViewController: NSViewController {
         grid.constraints.filter { $0.firstAttribute == .height && $0.secondItem == nil }
             .forEach { $0.isActive = false }
 
+        // Keep the editable field tall enough for its bezel and field editor
+        // when the surrounding grid is fitted to its content.
+        tunDNSTextField.setContentCompressionResistancePriority(.required, for: .vertical)
+        tunDNSTextField.heightAnchor.constraint(
+            greaterThanOrEqualToConstant: max(24, tunDNSTextField.intrinsicContentSize.height)
+        ).isActive = true
+
         let label = NSTextField(labelWithString: NSLocalizedString("TUN IP Stack", comment: ""))
         let control = NSHostingView(rootView: TunStackSettingsView()
             .frame(width: 270, alignment: .leading)
@@ -177,6 +184,15 @@ class MetaPrefsViewController: NSViewController {
         let row = grid.addRow(with: [label, control])
         row.yPlacement = .top
         control.widthAnchor.constraint(equalToConstant: 270).isActive = true
+        let dnsLabel = NSTextField(labelWithString: NSLocalizedString("Fallback DNS", comment: ""))
+        let dnsControl = NSHostingView(rootView: FallbackDNSSettingsView()
+            .frame(width: 270, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true))
+        dnsControl.translatesAutoresizingMaskIntoConstraints = false
+        dnsControl.setContentHuggingPriority(.required, for: .vertical)
+        dnsControl.setContentCompressionResistancePriority(.required, for: .vertical)
+        grid.addRow(with: [dnsLabel, dnsControl]).yPlacement = .top
+        dnsControl.widthAnchor.constraint(equalToConstant: 270).isActive = true
         // Keep rows at their content height instead of stretching them to fill
         // an arbitrarily enlarged preferences window.
         grid.setContentHuggingPriority(.required, for: .vertical)

@@ -52,6 +52,20 @@ GitHub Actions 保留分支构建只上传 Artifact、`v*` 标签构建发布 Re
 
 默认配置目录是 `$HOME/.config/clash.meta`
 
+本地运行的配置（包括远程订阅）若完全没有 `dns` 字段，应用会在临时运行配置中补充以下 DNS 设置，原配置文件不变。已有 `dns` 时原样保留，包括显式关闭、空对象或 `null`，不会合并或覆盖其中的字段：
+
+```yaml
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - https://dns.alidns.com/dns-query
+```
+
+可在设置 → Meta → 备用 DNS 中修改上述 nameserver 地址（DNS over HTTPS，每行一个），保存或恢复默认后，在下次加载本地配置时生效。已有 DNS 配置不受影响。
+
 默认配置文件名是 `config.yaml`。你也可以使用自定义配置名，并在菜单的 `Config` 栏中切换配置。
 
 更多细节请查看 [Mihomo wiki](https://wiki.metacubex.one/)。
