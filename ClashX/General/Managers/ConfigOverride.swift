@@ -97,6 +97,11 @@ final class ConfigOverride {
         return intent.tunOverridden ? intent.tunEnabled : nil
     }
 
+    var tunIPv6Enabled: Bool {
+        get { UserDefaults.standard.bool(forKey: "tunIPv6Enabled") }
+        set { UserDefaults.standard.set(newValue, forKey: "tunIPv6Enabled") }
+    }
+
     var tunStack: TunStack {
         get {
             guard let saved = UserDefaults.standard.string(forKey: "overrideTunStack") else { return .system }
@@ -109,14 +114,14 @@ final class ConfigOverride {
         }
     }
 
-    func composeConfig(configName: String, stack: TunStack? = nil, tunEnabled: Bool? = nil) async -> String? {
+    func composeConfig(configName: String, stack: TunStack? = nil, tunEnabled: Bool? = nil, tunIPv6: Bool? = nil) async -> String? {
         guard let configPath = await ApiRequest.findConfigPath(configName: configName),
               let yamlString = readFileString(configPath),
               var yaml = try? Yams.compose(yaml: yamlString) else {
             return nil
         }
 
-        await applyOverrides(&yaml, stack: stack)
+        await applyOverrides(&yaml, stack: stack, tunIPv6: tunIPv6)
         if let tunEnabled {
             yaml["tun"]!["enable"] = .init("\(tunEnabled)")
         }
@@ -129,7 +134,7 @@ final class ConfigOverride {
     }
 
     @MainActor
-    func applyOverrides(_ yaml: inout Node, stack: TunStack? = nil) {
+    func applyOverrides(_ yaml: inout Node, stack: TunStack? = nil, tunIPv6: Bool? = nil) {
         if let allowLan = allowLan {
             yaml["allow-lan"] = .init("\(allowLan)")
         }
@@ -138,7 +143,7 @@ final class ConfigOverride {
 
         applyDNSFallback(&yaml)
         applySnifferOverride(&yaml)
-        applyTunOverride(&yaml)
+        applyTunOverride(&yaml, ipv6: tunIPv6 ?? tunIPv6Enabled)
         let selectedStack = stack ?? tunStack
         if selectedStack != .followConfig {
             yaml["tun"]!["stack"] = .init(selectedStack.rawValue)
@@ -187,7 +192,7 @@ final class ConfigOverride {
     }
 
     @MainActor
-    private func applyTunOverride(_ yaml: inout Node) {
+    private func applyTunOverride(_ yaml: inout Node, ipv6: Bool) {
         if yaml["tun"] != nil {
             if let tunEnable = tunEnable {
                 yaml["tun"]!["enable"] = .init("\(tunEnable)")
@@ -203,10 +208,11 @@ final class ConfigOverride {
                 ],
             ]
         }
-        // Match ClashX Pro's IPv4-only TUN. Omitting this field lets Mihomo
-        // install its default IPv6 address and routes even with dns.ipv6=false.
-        // Keep the system's IPv6 and the profile's DNS settings unchanged.
-        yaml["tun"]!["inet6-address"] = .sequence(.init([]))
+        // Explicitly opt in to TUN IPv6 instead of inheriting Mihomo's default.
+        // The core's global IPv6 setting still applies.
+        yaml["tun"]!["inet6-address"] = ipv6
+            ? ["fdfe:dcba:9876::1/126"]
+            : .sequence(.init([]))
     }
 
     private func readFileString(_ path: String) -> String? {
@@ -222,6 +228,7 @@ final class TunStackSettings: ObservableObject {
     nonisolated static let remoteControlChanged = Notification.Name("TunStackRemoteControlChanged")
 
     @Published private(set) var selection = ConfigOverride.shared.tunStack
+    @Published private(set) var ipv6Enabled = ConfigOverride.shared.tunIPv6Enabled
     @Published private(set) var isApplying = false
     @Published private(set) var isRemote = RemoteControlManager.selectConfig != nil
     @Published private(set) var currentStack: String?
@@ -255,11 +262,21 @@ final class TunStackSettings: ObservableObject {
     }
 
     func select(_ stack: TunStack) async {
-        guard canEdit, stack != selection else { return }
+        await apply(stack: stack, ipv6: ipv6Enabled)
+    }
+
+    func setIPv6Enabled(_ enabled: Bool) async {
+        await apply(stack: selection, ipv6: enabled)
+    }
+
+    private func apply(stack: TunStack, ipv6: Bool) async {
+        guard canEdit, stack != selection || ipv6 != ipv6Enabled else { return }
         errorMessage = nil
         guard kernelReady else {
             ConfigOverride.shared.tunStack = stack
             selection = stack
+            ConfigOverride.shared.tunIPv6Enabled = ipv6
+            ipv6Enabled = ipv6
             return
         }
 
@@ -267,10 +284,11 @@ final class TunStackSettings: ObservableObject {
         defer { isApplying = false }
         let name = ConfigManager.selectConfigName
         let previous = selection
+        let previousIPv6 = ipv6Enabled
         // Read the actual enable state: changing the stack must never enable TUN.
         guard let current = await ApiRequest.requestConfig(),
-              let path = await ConfigOverride.shared.composeConfig(configName: name, stack: stack, tunEnabled: current.tun.enable),
-              let rollbackPath = await ConfigOverride.shared.composeConfig(configName: name, stack: previous, tunEnabled: current.tun.enable) else {
+              let path = await ConfigOverride.shared.composeConfig(configName: name, stack: stack, tunEnabled: current.tun.enable, tunIPv6: ipv6),
+              let rollbackPath = await ConfigOverride.shared.composeConfig(configName: name, stack: previous, tunEnabled: current.tun.enable, tunIPv6: previousIPv6) else {
             errorMessage = NSLocalizedString("Unable to prepare TUN configuration.", comment: "")
             return
         }
@@ -305,6 +323,8 @@ final class TunStackSettings: ObservableObject {
 
         ConfigOverride.shared.tunStack = stack
         selection = stack
+        ConfigOverride.shared.tunIPv6Enabled = ipv6
+        ipv6Enabled = ipv6
         if RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name {
             await ConfigReloadManager.shared.handleClashConfigUpdated(preserveProxyState: true)
         }

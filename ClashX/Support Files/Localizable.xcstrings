@@ -1,6 +1,52 @@
 {
   "sourceLanguage": "en",
   "strings": {
+  "Off by default: TUN captures IPv4 only. Enabling also requires global IPv6 support.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Off by default: TUN captures IPv4 only. Enabling also requires global IPv6 support."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "默认关闭，仅接管 IPv4。开启还需要全局 IPv6 支持。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "預設關閉，僅接管 IPv4。開啟還需要全域 IPv6 支援。"
+        }
+      }
+    }
+  },
+  "TUN IPv6": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "TUN IPv6"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "TUN IPv6"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "TUN IPv6"
+        }
+      }
+    }
+  },
   "Used only when the configuration has no DNS section. Separate from TUN DNS. Saved changes apply the next time a local configuration is loaded.": {
     "extractionState": "manual",
     "localizations": {

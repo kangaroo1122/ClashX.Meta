@@ -334,6 +334,15 @@ struct TunStackSettingsView: View {
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .disabled(!settings.canEdit)
+                Toggle("TUN IPv6", isOn: Binding(
+                    get: { settings.ipv6Enabled },
+                    set: { value in Task { await settings.setIPv6Enabled(value) } }
+                ))
+                .disabled(!settings.canEdit)
+                Text("Off by default: TUN captures IPv4 only. Enabling also requires global IPv6 support.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             if settings.isApplying {
