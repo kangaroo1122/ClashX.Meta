@@ -299,11 +299,30 @@ final class TunStackSettings: ObservableObject {
         }
 
         var applyError = await ApiRequest.requestConfigUpdate(configPath: path)
+        guard RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name,
+              ConfigManager.shared.kernelState == .running else {
+            errorMessage = NSLocalizedString("Configuration changed. Please try again.", comment: "")
+            return
+        }
         if applyError == nil, RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name {
             if let applied = await ApiRequest.requestConfig() {
+                guard RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name,
+                      ConfigManager.shared.kernelState == .running else {
+                    errorMessage = NSLocalizedString("Configuration changed. Please try again.", comment: "")
+                    return
+                }
                 ConfigManager.shared.currentConfig = applied
                 if stack != .followConfig && applied.tun.stack.lowercased() != stack.rawValue {
                     applyError = NSLocalizedString("The core did not apply the selected TUN stack.", comment: "")
+                } else if applied.tun.enable != current.tun.enable {
+                    applyError = NSLocalizedString("Unable to verify the TUN configuration.", comment: "")
+                } else {
+                    let hasIPv6Address = !(applied.tun.inet6Address ?? []).isEmpty
+                    // Global IPv6 may suppress an enabled TUN IPv6 preference.
+                    // Turning the preference off must always remove TUN IPv6.
+                    if (!ipv6 && hasIPv6Address) || (ipv6 && applied.ipv6 && !hasIPv6Address) {
+                        applyError = NSLocalizedString("The core did not apply the TUN IPv6 setting.", comment: "")
+                    }
                 }
             } else {
                 applyError = NSLocalizedString("Unable to verify the TUN configuration.", comment: "")

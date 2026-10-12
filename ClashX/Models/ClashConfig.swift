@@ -52,6 +52,12 @@ class ClashConfig: Codable {
 		let enable: Bool
 		let device: String
 		let stack: String
+        let inet6Address: [String]?
+
+        private enum CodingKeys: String, CodingKey {
+            case enable, device, stack
+            case inet6Address = "inet6-address"
+        }
 		//        let dns-hijack: [String]
 		//        let auto-route: Bool
 		//        let auto-detect-interface: Bool

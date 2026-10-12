@@ -1,6 +1,29 @@
 {
   "sourceLanguage": "en",
   "strings": {
+  "The core did not apply the TUN IPv6 setting.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "The core did not apply the TUN IPv6 setting."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "内核未应用 TUN IPv6 设置。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "核心未套用 TUN IPv6 設定。"
+        }
+      }
+    }
+  },
   "Off by default: TUN captures IPv4 only. Enabling also requires global IPv6 support.": {
     "extractionState": "manual",
     "localizations": {
