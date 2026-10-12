@@ -75,16 +75,7 @@
                                                             </textField>
                                                         </gridCell>
                                                         <gridCell row="PIc-Wv-hxH" column="MDQ-YN-zJd" id="H9O-ll-Z6U"/>
-                                                        <gridCell row="PIc-Wv-hxH" column="UPL-cT-NLz" id="D61-lb-gFK">
-                                                            <textField key="contentView" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="uyA-iw-5fY">
-                                                                <rect key="frame" x="75" y="0.0" width="166" height="14"/>
-                                                                <textFieldCell key="cell" lineBreakMode="clipping" title="Use local DNS (recommended)" id="4Zp-vS-Add">
-                                                                    <font key="font" metaFont="smallSystem"/>
-                                                                    <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
-                                                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                                </textFieldCell>
-                                                            </textField>
-                                                        </gridCell>
+                                                        <gridCell row="PIc-Wv-hxH" column="UPL-cT-NLz" id="D61-lb-gFK"/>
                                                     </gridCells>
                                                 </gridView>
                                             </subviews>
