@@ -72,9 +72,6 @@
                                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <connections>
-                                                                    <action selector="tunDNSChanged:" target="bU7-R8-ocO" id="Zrz-j3-5bz"/>
-                                                                </connections>
                                                             </textField>
                                                         </gridCell>
                                                         <gridCell row="PIc-Wv-hxH" column="MDQ-YN-zJd" id="H9O-ll-Z6U"/>

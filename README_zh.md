@@ -66,7 +66,7 @@ dns:
     - https://dns.alidns.com/dns-query
 ```
 
-可在设置 → Meta → 备用 DNS 中修改上述 nameserver 地址（DNS over HTTPS，每行一个），保存或恢复默认后，在下次加载本地配置时生效。已有 DNS 配置不受影响。
+可在设置 → Meta → DNS 覆写 中修改上述 nameserver 地址（DNS over HTTPS，每行一个），点击统一的“保存 DNS 设置”后，在下次加载本地配置时生效；“恢复默认”同时将 DNS 1 设为 `8.8.8.8`、清空 DNS 2，并将 DNS 覆写填回默认地址，仍需点击保存，不影响 TUN 协议栈或 IPv6 开关。已有 DNS 配置不受影响。
 
 默认配置文件名是 `config.yaml`。你也可以使用自定义配置名，并在菜单的 `Config` 栏中切换配置。
 

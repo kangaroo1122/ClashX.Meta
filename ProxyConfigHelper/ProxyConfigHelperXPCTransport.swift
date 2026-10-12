@@ -4,6 +4,20 @@
 //
 
 import Foundation
+import Network
+
+/// Shared by the settings editor and privileged helper; preserves server order.
+enum TunDNSAddresses {
+    static func parse(_ value: String) -> [String]? {
+        let parts = value.replacingOccurrences(of: "，", with: ",")
+            .components(separatedBy: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard !parts.isEmpty, parts.allSatisfy({ IPv4Address($0) != nil }) else { return nil }
+        var seen = Set<String>()
+        return parts.filter { seen.insert($0).inserted }
+    }
+}
+
 
 enum ProxyConfigHelperXPCError: LocalizedError, Sendable {
 	case invalidRequestEnvelope

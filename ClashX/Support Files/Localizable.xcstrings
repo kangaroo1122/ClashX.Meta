@@ -1,6 +1,280 @@
 {
   "sourceLanguage": "en",
   "strings": {
+  "Save DNS settings": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Save DNS settings"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "保存 DNS 设置"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "儲存 DNS 設定"
+        }
+      }
+    }
+  },
+  "DNS settings saved. Re-enable TUN for system DNS changes; reload the configuration for DNS override changes.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS settings saved. Re-enable TUN for system DNS changes; reload the configuration for DNS override changes."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 设置已保存。系统 DNS 需重新开启 TUN 生效；DNS 覆写需重新加载配置生效。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 設定已儲存。系統 DNS 需重新開啟 TUN 生效；DNS 覆寫需重新載入設定生效。"
+        }
+      }
+    }
+  },
+  "DNS 1": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 1"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 1"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 1"
+        }
+      }
+    }
+  },
+  "DNS 2 (optional)": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 2 (optional)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 2（可选）"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 2（選填）"
+        }
+      }
+    }
+  },
+  "DNS 1 requires a valid IPv4 address.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 1 requires a valid IPv4 address."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 1 必须填写有效的 IPv4 地址。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 1 必須填寫有效的 IPv4 位址。"
+        }
+      }
+    }
+  },
+  "DNS 2 must be empty or a valid IPv4 address.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 2 must be empty or a valid IPv4 address."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 2 请留空或填写一个有效的 IPv4 地址。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "DNS 2 請留空或填寫一個有效的 IPv4 位址。"
+        }
+      }
+    }
+  },
+  "Saved. Re-enable TUN to apply.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Saved. Re-enable TUN to apply."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已保存，重新开启 TUN 后生效。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已儲存，重新開啟 TUN 後生效。"
+        }
+      }
+    }
+  },
+  "System DNS used while TUN is enabled. Save, then re-enable TUN to apply.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "System DNS used while TUN is enabled. Save, then re-enable TUN to apply."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "TUN 开启时使用的系统 DNS。保存后重新开启 TUN 生效。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "TUN 開啟時使用的系統 DNS。儲存後重新開啟 TUN 生效。"
+        }
+      }
+    }
+  },
+  "Save TUN DNS": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Save TUN DNS"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "保存 TUN DNS"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "儲存 TUN DNS"
+        }
+      }
+    }
+  },
+  "Optional": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Optional"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "可选"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "選填"
+        }
+      }
+    }
+  },
+  "Enter IPv4 addresses separated by commas. The previous setting has been kept.": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter IPv4 addresses separated by commas. The previous setting has been kept."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请输入以逗号分隔的 IPv4 地址，已保留上次设置。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "請輸入以逗號分隔的 IPv4 位址，已保留上次設定。"
+        }
+      }
+    }
+  },
+  "Comma-separated IPv4 addresses, in preferred order. Saved when focus leaves this field; re-enable TUN to apply.": {
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Comma-separated IPv4 addresses, in preferred order. Saved when focus leaves this field; re-enable TUN to apply."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "按优先顺序填写 IPv4 地址，用逗号分隔。失去焦点时保存，重新开启 TUN 后生效。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "依優先順序填寫 IPv4 位址，以逗號分隔。失去焦點時儲存，重新開啟 TUN 後生效。"
+        }
+      }
+    }
+  },
   "The core did not apply the TUN IPv6 setting.": {
     "extractionState": "manual",
     "localizations": {
@@ -139,13 +413,13 @@
       }
     }
   },
-  "Save fallback DNS": {
+  "Save default profile DNS": {
     "extractionState": "manual",
     "localizations": {
       "en": {
         "stringUnit": {
           "state": "translated",
-          "value": "Save fallback DNS"
+          "value": "Save default profile DNS"
         }
       },
       "zh-Hans": {
@@ -185,25 +459,25 @@
       }
     }
   },
-  "Fallback DNS": {
+  "DNS override": {
     "extractionState": "manual",
     "localizations": {
       "en": {
         "stringUnit": {
           "state": "translated",
-          "value": "Fallback DNS"
+          "value": "DNS override"
         }
       },
       "zh-Hans": {
         "stringUnit": {
           "state": "translated",
-          "value": "备用 DNS"
+          "value": "DNS 覆写"
         }
       },
       "zh-Hant": {
         "stringUnit": {
           "state": "translated",
-          "value": "備用 DNS"
+          "value": "DNS 覆寫"
         }
       }
     }

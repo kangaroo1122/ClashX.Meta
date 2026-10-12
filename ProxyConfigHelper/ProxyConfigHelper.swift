@@ -130,7 +130,7 @@ private extension ProxyConfigHelper {
 		}
 
 		store.register(ProxyConfigHelperMessages.UpdateTun.self) { [unowned self] message in
-			await updateTun(message)
+			try await updateTun(message)
 			return ProxyConfigHelperExplicitSuccess()
 		}
 
@@ -237,12 +237,11 @@ private extension ProxyConfigHelper {
 	}
 
 	@MainActor
-	func updateTun(_ message: ProxyConfigHelperMessages.UpdateTun) async {
-		metaDNS.setCustomDNS(message.dns)
+	func updateTun(_ message: ProxyConfigHelperMessages.UpdateTun) async throws {
 		if message.state {
-			metaDNS.hijackDNS()
+            try metaDNS.hijackDNS(message.dns)
 		} else {
-			metaDNS.revertDNS()
+			try metaDNS.revertDNS()
 		}
 		await metaDNS.flushDnsCache()
 	}

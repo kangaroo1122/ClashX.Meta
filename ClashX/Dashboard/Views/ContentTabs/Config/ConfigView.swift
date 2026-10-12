@@ -277,41 +277,30 @@ struct ConfigView: View {
 }
 
 @MainActor
-struct FallbackDNSSettingsView: View {
-    @State private var addresses = ConfigOverride.shared.fallbackDNSServers.joined(separator: "\n")
-    @State private var savedAddresses = ConfigOverride.shared.fallbackDNSServers.joined(separator: "\n")
+final class DNSOverrideDraft: ObservableObject {
+    @Published var addresses = ConfigOverride.shared.fallbackDNSServers.joined(separator: "\n")
+    var parsed: [String]? { ConfigOverride.parseFallbackDNS(addresses) }
+}
 
-    private var parsed: [String]? { ConfigOverride.parseFallbackDNS(addresses) }
+@MainActor
+struct FallbackDNSSettingsView: View {
+    @ObservedObject var draft: DNSOverrideDraft
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("DNS over HTTPS addresses, one per line.")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            TextEditor(text: $addresses)
+            TextEditor(text: $draft.addresses)
                 .font(.system(size: 11, design: .monospaced))
                 .frame(height: 60)
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
-                .accessibilityLabel(Text("Fallback DNS"))
-            HStack {
-                Button("Save fallback DNS") {
-                    guard let parsed else { return }
-                    ConfigOverride.shared.saveFallbackDNS(parsed)
-                    addresses = parsed.joined(separator: "\n")
-                    savedAddresses = addresses
-                }
-                .disabled(parsed == nil || addresses == savedAddresses)
-                Button("Restore default DNS") {
-                    addresses = ConfigOverride.defaultFallbackDNS
-                    ConfigOverride.shared.saveFallbackDNS([addresses])
-                    savedAddresses = addresses
-                }
-            }
-            Text(LocalizedStringKey(parsed == nil
+                .accessibilityLabel(Text("DNS override"))
+            Text(LocalizedStringKey(draft.parsed == nil
                  ? "Enter at least one valid HTTPS DNS address."
                  : "Used only when the configuration has no DNS section. Separate from TUN DNS. Saved changes apply the next time a local configuration is loaded."))
                 .font(.caption)
-                .foregroundColor(parsed == nil ? .red : .secondary)
+                .foregroundColor(draft.parsed == nil ? .red : .secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

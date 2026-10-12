@@ -10,7 +10,15 @@ import SystemConfiguration
 // https://github.com/zhuhaow/Specht2/blob/main/app/me.zhuhaow.Specht2.proxy-helper/ProxyHelper.swift
 
 class MetaDNS: NSObject {
-	private var customDNS = "8.8.8.8"
+	private static let appliedDNSKey = "ProxyConfigHelper.AppliedTunDNS"
+    private var customDNS = UserDefaults.standard.stringArray(forKey: MetaDNS.appliedDNSKey)
+    private static let pendingDNSKey = "ProxyConfigHelper.PendingDNSChange"
+    private var hasPendingChange = UserDefaults.standard.bool(forKey: MetaDNS.pendingDNSKey)
+
+    private func dnsError(_ message: String) -> NSError {
+        NSError(domain: "com.metacubex.ClashX.ProxyConfigHelper.DNS", code: 1,
+                userInfo: [NSLocalizedDescriptionKey: message])
+    }
 	
 	static let savedDNSKey = "ProxyConfigHelper.SavedSystemDNSs"
     var savedDNS = [String: [String]]()
@@ -45,74 +53,76 @@ class MetaDNS: NSObject {
         AuthorizationFree(authRef, AuthorizationFlags())
     }
     
-	@objc func setCustomDNS(_ dns: String) {
-		customDNS = dns
-	}
-
-	/// Resolve the true original DNS per service based on current system DNS and saved DNS.
-	/// If system DNS matches customDNS (hijacked) and savedDNS is valid → trust savedDNS.
-	/// Otherwise trust the system value (savedDNS is corrupted / missing / all match).
-	private func resolveOriginalDNS(_ currentDNS: [String: [String]]) -> [String: [String]] {
-		var resolved = [String: [String]]()
-		for (serviceID, sysDNS) in currentDNS {
-			let saved = savedDNS[serviceID]
-			if sysDNS == [customDNS], let saved, saved != [customDNS] {
-				resolved[serviceID] = saved
-			} else {
-				resolved[serviceID] = sysDNS
-			}
-		}
-		return resolved
-	}
-
-    @objc func hijackDNS() {
-		let currentDNS = getAllDns()
-		savedDNS = resolveOriginalDNS(currentDNS)
-		if let data = try? JSONEncoder().encode(savedDNS) {
-			UserDefaults.standard.set(data, forKey: MetaDNS.savedDNSKey)
-		}
-		let alreadyHijacked = currentDNS.allSatisfy { $0.value == [customDNS] }
-		guard !alreadyHijacked else { return }
-		let dnsDic = currentDNS.reduce(into: [:]) { $0[$1.key] = [customDNS] }
-		updateDNSConfigure(dnsDic)
+    // A missing applied list denotes a legacy backup. The old helper never
+    // persisted its custom DNS, so do not assume that it was 8.8.8.8.
+    private func resolveOriginalDNS(_ currentDNS: [String: [String]]) -> [String: [String]] {
+        var resolved = savedDNS
+        for (serviceID, sysDNS) in currentDNS {
+            if let saved = savedDNS[serviceID],
+               customDNS == nil || hasPendingChange || sysDNS == customDNS {
+                resolved[serviceID] = saved
+            } else {
+                resolved[serviceID] = sysDNS
+            }
+        }
+        return resolved
     }
-    
-    @objc func revertDNS() {
-		guard savedDNS.count > 0 else { return }
-		let currentDNS = getAllDns()
-		let resolved = resolveOriginalDNS(currentDNS)
-		updateDNSConfigure(resolved)
-		savedDNS.removeAll()
-		UserDefaults.standard.removeObject(forKey: MetaDNS.savedDNSKey)
+
+    func hijackDNS(_ dns: String) throws {
+        guard let addresses = TunDNSAddresses.parse(dns) else {
+            throw dnsError("Invalid TUN DNS addresses.")
+        }
+        let currentDNS = try getAllDns()
+        let originals = resolveOriginalDNS(currentDNS)
+        let backup = try JSONEncoder().encode(originals)
+
+        // Keep the original backup through address changes. Avoid restoring and
+        // immediately re-reading DNS, which could capture the previous override.
+        savedDNS = originals
+        UserDefaults.standard.set(backup, forKey: MetaDNS.savedDNSKey)
+        hasPendingChange = true
+        UserDefaults.standard.set(true, forKey: MetaDNS.pendingDNSKey)
+        customDNS = addresses
+        UserDefaults.standard.set(addresses, forKey: MetaDNS.appliedDNSKey)
+        let requested = currentDNS.mapValues { _ in addresses }
+        try updateDNSConfigure(requested)
+        hasPendingChange = false
+        UserDefaults.standard.removeObject(forKey: MetaDNS.pendingDNSKey)
     }
-    
-    func getAllDns() -> [String: [String]] {
-        var re = [String: [String]]()
-        
+
+    func revertDNS() throws {
+        guard !savedDNS.isEmpty else { return }
+        let currentDNS = try getAllDns()
+        let resolved = resolveOriginalDNS(currentDNS)
+        // Persist recovery intent before writing: commit may succeed even when
+        // apply fails. A later retry must still use the original backup.
+        savedDNS = resolved
+        UserDefaults.standard.set(try JSONEncoder().encode(resolved), forKey: MetaDNS.savedDNSKey)
+        hasPendingChange = true
+        UserDefaults.standard.set(true, forKey: MetaDNS.pendingDNSKey)
+        try updateDNSConfigure(resolved)
+        savedDNS.removeAll()
+        UserDefaults.standard.removeObject(forKey: MetaDNS.savedDNSKey)
+        hasPendingChange = false
+        UserDefaults.standard.removeObject(forKey: MetaDNS.pendingDNSKey)
+    }
+
+    private func getAllDns() throws -> [String: [String]] {
         guard let prefs = SCPreferencesCreate(nil, "com.metacubex.ClashX.ProxyConfigHelper.preferences" as CFString, nil),
               let values = SCPreferencesGetValue(prefs, kSCPrefNetworkServices) as? [String: AnyObject] else {
-            return re
+            throw dnsError("Failed to read network services for DNS backup.")
         }
-        
-        values.reduce(into: [:]) {
-            $0[$1.key] = $1.value.value(forKeyPath: "Interface.Hardware") as? String
-        }.filter {
-            ["AirPort", "Wi-Fi", "Ethernet"].contains($0.value)
-        }.forEach {
-            re[$0.key] = getDNSForServiceID($0.key)
+        var result = [String: [String]]()
+        for (serviceID, service) in values {
+            guard let hardware = service.value(forKeyPath: "Interface.Hardware") as? String,
+                  ["AirPort", "Wi-Fi", "Ethernet"].contains(hardware) else { continue }
+            // Read the committed preferences, not the asynchronously updated
+            // dynamic store, when taking a backup immediately after a change.
+            result[serviceID] = service.value(forKeyPath: "DNS.ServerAddresses") as? [String] ?? []
         }
-        
-        return re
+        return result
     }
-    
-    func getDNSForServiceID(_ serviceID:String) -> [String] {
-        let serviceSetupDNSKey = "Setup:/Network/Service/\(serviceID)/DNS" as CFString
-        let dynmaicStore =  SCDynamicStoreCreate(kCFAllocatorSystemDefault, "com.metacubex.ClashX.ProxyConfigHelper.dns" as CFString, nil, nil)
-        
-        return SCDynamicStoreCopyValue(dynmaicStore, serviceSetupDNSKey)?[kSCPropNetDNSServerAddresses] as? [String] ?? []
-    }
-    
-    
+
     func flushDnsCache() async {
         if #available(OSX 10.15, *) {
             await Command(cmd: "/usr/bin/dscacheutil", args: ["-flushcache"]).run()
@@ -122,44 +132,40 @@ class MetaDNS: NSObject {
         print("flushDnsCache")
     }
 
-    private func updateDNSConfigure(_ dnsDic: [String: [String]]) {
+    private func updateDNSConfigure(_ dnsDic: [String: [String]]) throws {
+        guard !dnsDic.isEmpty else { return }
 
         guard let prefRef = SCPreferencesCreateWithAuthorization(
             nil,
             "com.metacubex.ClashX.ProxyConfigHelper.config" as CFString,
             nil,
             authRef) else {
-            NSLog("Error: Failed to obtain preference ref.")
-            return
+            throw dnsError("Failed to obtain DNS preference reference.")
         }
 
         guard SCPreferencesLock(prefRef, true) else {
-            NSLog("Error: Failed to obtain lock to preference.")
-            return
+            throw dnsError("Failed to lock DNS preferences.")
         }
 
         defer {
             SCPreferencesUnlock(prefRef)
         }
 
-        guard let networks = SCNetworkSetCopyCurrent(prefRef),
-              let services = SCNetworkSetCopyServices(networks) as? [SCNetworkService] else {
-            NSLog("Error: Failed to load network services.")
-            return
+        guard let services = SCNetworkServiceCopyAll(prefRef) as? [SCNetworkService] else {
+            throw dnsError("Failed to load network services.")
         }
         
         let type = kSCNetworkProtocolTypeDNS
 
-        services.forEach { service in
+        for service in services {
             guard let id = SCNetworkServiceGetServiceID(service) as? String,
                   let dns = dnsDic[id] else {
-                return
+                continue
             }
             
             
             guard let protoc = SCNetworkServiceCopyProtocol(service, type) else {
-                NSLog("Error: Failed to obtain \(type) settings for \(SCNetworkServiceGetName(service)!)")
-                return
+                throw dnsError("Failed to obtain DNS settings for network service \(id).")
             }
 
             let config = SCNetworkProtocolGetConfiguration(protoc)
@@ -169,8 +175,7 @@ class MetaDNS: NSObject {
             dic["ServerAddresses"] = dns
 
             guard SCNetworkProtocolSetConfiguration(protoc, dic as CFDictionary) else {
-                NSLog("Error: Failed to set \(type) settings for \(SCNetworkServiceGetName(service)!)")
-                return
+                throw dnsError("Failed to set DNS settings for network service \(id).")
             }
 
             NSLog("Set \(type) settings for \(SCNetworkServiceGetName(service)!)")
@@ -178,13 +183,11 @@ class MetaDNS: NSObject {
 
 
         guard SCPreferencesCommitChanges(prefRef) else {
-            NSLog("Error: Failed to commit preference change")
-            return
+            throw dnsError("Failed to commit DNS preference changes.")
         }
 
         guard SCPreferencesApplyChanges(prefRef) else {
-            NSLog("Error: Failed to apply preference change")
-            return
+            throw dnsError("Failed to apply DNS preference changes.")
         }
     }
 }
