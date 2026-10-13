@@ -213,6 +213,38 @@ class RemoteConfigManager {
         }
     }
 
+    enum RuntimeConfigFile: String {
+        case runtime = "runtime.yaml"
+        case rollback = "rollback.yaml"
+    }
+
+    /// Call within the configuration apply transaction so the file remains
+    /// unchanged until the core has finished loading it. Verification and
+    /// decryption keep their own uniquely named scratch files below.
+    @MainActor
+    static func writeRuntimeConfig(string: String, file: RuntimeConfigFile) -> String? {
+        let directory = URL(fileURLWithPath: Paths.cacheConfigs(), isDirectory: true)
+        let destination = directory.appendingPathComponent(file.rawValue)
+        let staged = directory.appendingPathComponent(".\(file.rawValue).\(UUID().uuidString).tmp")
+        let fm = FileManager.default
+        defer { try? fm.removeItem(at: staged) }
+        do {
+            try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+            guard fm.createFile(atPath: staged.path, contents: Data(string.utf8), attributes: [.posixPermissions: 0o600]) else {
+                return nil
+            }
+            if fm.fileExists(atPath: destination.path) {
+                // Keep the staged file's private permissions when replacing.
+                _ = try fm.replaceItemAt(destination, withItemAt: staged, options: .usingNewMetadata)
+            } else {
+                try fm.moveItem(at: staged, to: destination)
+            }
+            return destination.path
+        } catch {
+            return nil
+        }
+    }
+
     static func createCacheConfig(string: String) -> String? {
 		let path = Paths.cacheConfigs()
         let confPath = path + "/\(UUID().uuidString).yaml"
@@ -224,7 +256,7 @@ class RemoteConfigManager {
             try? fm.removeItem(atPath: confPath)
         }
 
-        guard fm.createFile(atPath: confPath, contents: string.data(using: .utf8)) else {
+        guard fm.createFile(atPath: confPath, contents: string.data(using: .utf8), attributes: [.posixPermissions: 0o600]) else {
             return nil
         }
         return confPath

@@ -351,12 +351,16 @@ actor ClashProcess {
 	}
 
 	private func pushInitConfig() async throws {
+		try await ConfigApplyCoordinator.shared.perform { try await self.pushInitConfigSerially() }
+	}
+
+	private func pushInitConfigSerially() async throws {
 		ClashProxy.cleanCache()
 		let configName = ConfigManager.selectConfigName
 		Logger.log("Push init config file: \(configName)")
 
 		guard let composedPath = await ConfigOverride.shared.composeConfig(configName: configName) else {
-			throw StartMetaError.pushConfigFailed("compose config failed")
+			throw StartMetaError.pushConfigFailed(await ConfigOverride.shared.compositionError ?? "compose config failed")
 		}
 
 		if let error = await ApiRequest.requestConfigUpdate(configPath: composedPath) {

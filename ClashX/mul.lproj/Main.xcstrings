@@ -1,6 +1,29 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+  "Cpr-mn-001.title": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom proxies and rules"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自定义代理与规则"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自訂代理與規則"
+        }
+      }
+    }
+  },
     "0iu-lB-eZN.title" : {
       "comment" : "Class = \"NSMenuItem\"; title = \"ERROR\"; ObjectID = \"0iu-lB-eZN\";",
       "extractionState" : "extracted_with_value",

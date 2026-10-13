@@ -577,6 +577,10 @@ extension AppDelegate {
     @IBAction func actionMoreSetting(_ sender: Any) {
         ClashWindowController<SettingTabViewController>.create().showWindow(sender)
     }
+
+    @IBAction func actionCustomProxySettings(_ sender: Any) {
+        ClashWindowController<CustomProxySettingsViewController>.create().showWindow(sender)
+    }
 }
 
 // MARK: Streaming Info

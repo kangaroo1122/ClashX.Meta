@@ -7,6 +7,44 @@ import Cocoa
 import RxCocoa
 import RxSwift
 
+/// Serialize the whole read/compose/apply/persist transaction, not just PUT.
+/// Nested calls in the same task (for example TUN reconciliation) share ownership.
+@MainActor
+final class ConfigApplyCoordinator {
+    static let shared = ConfigApplyCoordinator()
+    @TaskLocal private static var taskOwner: UUID?
+    private var owner: UUID?
+    private var ownerTaskID: Int?
+    private var waiters: [(UUID, CheckedContinuation<Void, Never>)] = []
+
+    func perform<T: Sendable>(_ operation: @MainActor () async throws -> T) async rethrows -> T {
+        // Task-local values also propagate to child tasks. Only the original
+        // task may re-enter; a spawned callback must wait like any other caller.
+        let taskID = withUnsafeCurrentTask { $0?.hashValue }
+        if let owner, Self.taskOwner == owner, let taskID, taskID == ownerTaskID {
+            return try await operation()
+        }
+        let token = UUID()
+        if owner != nil {
+            await withCheckedContinuation { waiters.append((token, $0)) }
+        } else {
+            owner = token
+        }
+        ownerTaskID = taskID
+        defer {
+            ownerTaskID = nil
+            if waiters.isEmpty {
+                owner = nil
+            } else {
+                let next = waiters.removeFirst()
+                owner = next.0
+                next.1.resume()
+            }
+        }
+        return try await Self.$taskOwner.withValue(token) { try await operation() }
+    }
+}
+
 @MainActor
 final class ConfigReloadManager {
     static let shared = ConfigReloadManager()
@@ -54,14 +92,27 @@ final class ConfigReloadManager {
     @discardableResult
     func updateConfig(configName: String? = nil, showNotification: Bool = true) async -> ErrorString? {
         await AppDelegate.shared.startProxyCore()
-        guard ConfigManager.shared.kernelState.isOperational else { return nil }
+        return await ConfigApplyCoordinator.shared.perform {
+            await self.applyConfig(configName: configName, showNotification: showNotification)
+        }
+    }
+
+    private func applyConfig(configName: String?, showNotification: Bool) async -> ErrorString? {
+        guard ConfigManager.shared.kernelState.isOperational else {
+            return NSLocalizedString("Wait for the core to finish starting or reloading before saving.", comment: "")
+        }
+        guard RemoteControlManager.selectConfig == nil else {
+            return NSLocalizedString("Configuration changed. Please try again.", comment: "")
+        }
 
         let config = configName ?? ConfigManager.selectConfigName
 
         ClashProxy.cleanCache()
 
         guard let composedPath = await ConfigOverride.shared.composeConfig(configName: config) else {
-            return "compose config failed"
+            let error = ConfigOverride.shared.compositionError ?? "compose config failed"
+            UpdateConfigAction.showError(text: error, configName: config)
+            return error
         }
 
         let err = await ApiRequest.requestConfigUpdate(configPath: composedPath)

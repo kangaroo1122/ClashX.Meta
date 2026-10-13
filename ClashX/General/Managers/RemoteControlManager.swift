@@ -64,7 +64,7 @@ class RemoteControlManager {
         updateMenuItems()
         updateDropDownMenuItems()
         try? await Task.sleep(seconds: 0.5)
-        RemoteControlManager.recoverSelection()
+        await ConfigApplyCoordinator.shared.perform { RemoteControlManager.recoverSelection() }
     }
 
     private static func recoverSelection() {
@@ -102,9 +102,14 @@ class RemoteControlManager {
     }
 
     @objc static func didSelectMenuItem(sender: ExternalControlMenuItem) {
-        selectConfig = sender.model
-        updateRemoteControl()
-        updateMenuItems()
+        let model = sender.model
+        Task { @MainActor in
+            await ConfigApplyCoordinator.shared.perform {
+                selectConfig = model
+                updateRemoteControl()
+                updateMenuItems()
+            }
+        }
     }
 
     static func updateRemoteControl() {

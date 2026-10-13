@@ -818,6 +818,12 @@
                                 <action selector="actionDashboard:" target="Voe-Tx-rLC" id="i6y-pW-cD3"/>
                             </connections>
                         </menuItem>
+                        <menuItem title="Custom proxies and rules" id="Cpr-mn-001">
+                            <modifierMask key="keyEquivalentModifierMask"/>
+                            <connections>
+                                <action selector="actionCustomProxySettings:" target="Voe-Tx-rLC" id="Cpr-ac-001"/>
+                            </connections>
+                        </menuItem>
                         <menuItem isSeparatorItem="YES" id="UpD-DI-Smv"/>
                         <menuItem title="Configs" id="JMV-Dy-CI0">
                             <modifierMask key="keyEquivalentModifierMask"/>

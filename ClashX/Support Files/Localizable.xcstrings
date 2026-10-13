@@ -1,6 +1,1893 @@
 {
   "sourceLanguage": "en",
   "strings": {
+  "Unable to prepare the previous configuration for rollback.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to prepare the previous configuration for rollback."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法准备用于回退的上次生效配置。"
+        }
+      }
+    }
+  },
+  "No previously applied configuration is available for rollback. Reload a working subscription.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "No previously applied configuration is available for rollback. Reload a working subscription."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "没有可用于回退的已生效配置，请重新加载可用的订阅。"
+        }
+      }
+    }
+  },
+  "A group references a missing proxy or group. Update its members after renaming or deleting an entry.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "A group references a missing proxy or group. Update its members after renaming or deleting an entry."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理组引用了不存在的代理或组，重命名或删除后请更新成员。"
+        }
+      }
+    }
+  },
+  "A proxy or group uses a reserved name.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "A proxy or group uses a reserved name."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理或代理组使用了系统保留名称。"
+        }
+      }
+    }
+  },
+  "A rule references a missing rule set.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "A rule references a missing rule set."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则引用了不存在的规则集。"
+        }
+      }
+    }
+  },
+  "A rule references a missing target. Update it after renaming or deleting an entry.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "A rule references a missing target. Update it after renaming or deleting an entry."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则引用了不存在的出口，重命名或删除后请更新出口。"
+        }
+      }
+    }
+  },
+  "Add entry": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Add entry"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "添加"
+        }
+      }
+    }
+  },
+  "Add member": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Add member"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "添加成员"
+        }
+      }
+    }
+  },
+  "Add or select an entry to edit its settings.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Add or select an entry to edit its settings."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "添加或选择一项，在此编辑配置。"
+        }
+      }
+    }
+  },
+  "Applied to every local subscription. Custom rules run first; unmatched traffic follows the subscription. Use Rule mode for routing.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Applied to every local subscription. Custom rules run first; unmatched traffic follows the subscription. Use Rule mode for routing."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自动应用于所有本地订阅。优先匹配自定义规则，未命中的流量继续按订阅处理；分流需使用规则模式。"
+        }
+      }
+    }
+  },
+  "Automatic fallback": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Automatic fallback"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自动回退"
+        }
+      }
+    }
+  },
+  "Back up and disable": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Back up and disable"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "备份并停用"
+        }
+      }
+    }
+  },
+  "Back up and disable custom settings?": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Back up and disable custom settings?"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "备份并停用自定义设置？"
+        }
+      }
+    }
+  },
+  "Check only when in use": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Check only when in use"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "仅在使用时检查"
+        }
+      }
+    }
+  },
+  "Choose a rule set": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Choose a rule set"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请选择规则集"
+        }
+      }
+    }
+  },
+  "Classical rules": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Classical rules"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "经典规则（classical）"
+        }
+      }
+    }
+  },
+  "Custom proxies": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom proxies"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理"
+        }
+      }
+    }
+  },
+  "Custom proxies and rules": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom proxies and rules"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自定义代理与规则"
+        }
+      }
+    }
+  },
+  "Custom proxy groups": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom proxy groups"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理组"
+        }
+      }
+    }
+  },
+  "Custom proxy settings saved and applied.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom proxy settings saved and applied."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自定义代理设置已保存并应用。"
+        }
+      }
+    }
+  },
+  "Custom proxy status": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom proxy status"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自定义代理状态"
+        }
+      }
+    }
+  },
+  "Custom rule sets": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom rule sets"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则集"
+        }
+      }
+    }
+  },
+  "Custom rules": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom rules"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则"
+        }
+      }
+    }
+  },
+  "Custom settings disabled. Backup:": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom settings disabled. Backup:"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已停用自定义设置。备份位置："
+        }
+      }
+    }
+  },
+  "Delete entry": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Delete entry"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "删除"
+        }
+      }
+    }
+  },
+  "Delete this entry?": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Delete this entry?"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "删除此项？"
+        }
+      }
+    }
+  },
+  "Discard changes": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Discard changes"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "放弃更改"
+        }
+      }
+    }
+  },
+  "Discard unsaved custom proxy changes?": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Discard unsaved custom proxy changes?"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "放弃尚未保存的自定义代理更改？"
+        }
+      }
+    }
+  },
+  "Do not resolve DNS for this rule": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Do not resolve DNS for this rule"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "此规则不触发 DNS 解析"
+        }
+      }
+    }
+  },
+  "Domain, network or process": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Domain, network or process"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "域名、网段或进程名"
+        }
+      }
+    }
+  },
+  "Domains": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Domains"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "域名（domain）"
+        }
+      }
+    }
+  },
+  "Each group needs at least one member, without duplicates.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Each group needs at least one member, without duplicates."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "每个代理组至少需要一个成员，成员不能重复。"
+        }
+      }
+    }
+  },
+  "Enable custom proxies and rules": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enable custom proxies and rules"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "启用自定义代理与规则"
+        }
+      }
+    }
+  },
+  "Enter a domain or domain keyword without a URL scheme or path.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter a domain or domain keyword without a URL scheme or path."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请填写域名或域名关键词，不要包含协议前缀、路径或空格。"
+        }
+      }
+    }
+  },
+  "Enter a server hostname or IP address without a URL scheme.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter a server hostname or IP address without a URL scheme."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请填写服务器域名或 IP 地址，不要包含协议前缀或路径。"
+        }
+      }
+    }
+  },
+  "Enter a valid HTTP or HTTPS health-check URL.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter a valid HTTP or HTTPS health-check URL."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请填写有效的 HTTP 或 HTTPS 健康检查网址。"
+        }
+      }
+    }
+  },
+  "Enter a valid HTTP or HTTPS test URL.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter a valid HTTP or HTTPS test URL."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请填写有效的 HTTP 或 HTTPS 测速网址。"
+        }
+      }
+    }
+  },
+  "Enter a valid IP network with a prefix length, such as 192.168.45.0/24.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Enter a valid IP network with a prefix length, such as 192.168.45.0/24."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请填写有效的 IP 网段及前缀长度，例如 192.168.45.0/24。"
+        }
+      }
+    }
+  },
+  "Fallback tries members from top to bottom. Groups may contain other custom groups; circular references are rejected.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Fallback tries members from top to bottom. Groups may contain other custom groups; circular references are rejected."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自动回退按顺序选择可用成员。允许引用其他自定义代理组，不允许循环引用。"
+        }
+      }
+    }
+  },
+  "File format": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "File format"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "文件格式"
+        }
+      }
+    }
+  },
+  "Group type": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Group type"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理组类型"
+        }
+      }
+    }
+  },
+  "HTTP and SOCKS5 cover the nodes in your work configurations. Credentials are saved locally with owner-only file permissions.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "HTTP and SOCKS5 cover the nodes in your work configurations. Credentials are saved locally with owner-only file permissions."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "支持 HTTP 和 SOCKS5 工作代理。账号密码保存在本地，仅当前用户有文件读写权限。"
+        }
+      }
+    }
+  },
+  "Health-check URL": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Health-check URL"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "健康检查网址"
+        }
+      }
+    }
+  },
+  "Health-check interval and timeout must be positive.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Health-check interval and timeout must be positive."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "健康检查间隔和超时必须大于零。"
+        }
+      }
+    }
+  },
+  "IP networks": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "IP networks"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "网段（ipcidr）"
+        }
+      }
+    }
+  },
+  "Interval (seconds)": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Interval (seconds)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "检查间隔（秒）"
+        }
+      }
+    }
+  },
+  "Invalid subscription exclude-filter.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Invalid subscription exclude-filter."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "订阅的节点排除条件格式无效。"
+        }
+      }
+    }
+  },
+  "Invalid subscription rule providers.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Invalid subscription rule providers."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "订阅中的规则集格式无效。"
+        }
+      }
+    }
+  },
+  "Keep editing": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Keep editing"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "继续编辑"
+        }
+      }
+    }
+  },
+  "Latency tolerance cannot be negative.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Latency tolerance cannot be negative."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "延迟容差不能小于零。"
+        }
+      }
+    }
+  },
+  "Lowest latency": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Lowest latency"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "最低延迟"
+        }
+      }
+    }
+  },
+  "MRS rule sets support domain or ipcidr behavior only.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "MRS rule sets support domain or ipcidr behavior only."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "MRS 格式只支持 domain 或 ipcidr 内容类型。"
+        }
+      }
+    }
+  },
+  "Manual selection": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Manual selection"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "手动选择"
+        }
+      }
+    }
+  },
+  "Members, in priority order": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Members, in priority order"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "成员（按优先顺序排列）"
+        }
+      }
+    }
+  },
+  "Move down": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Move down"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "下移"
+        }
+      }
+    }
+  },
+  "Move up": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Move up"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "上移"
+        }
+      }
+    }
+  },
+  "Node test URL (optional)": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Node test URL (optional)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "节点测速网址（可选）"
+        }
+      }
+    }
+  },
+  "Not tested": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Not tested"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "未测速"
+        }
+      }
+    }
+  },
+  "Password (optional)": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Password (optional)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "密码（可选）"
+        }
+      }
+    }
+  },
+  "Port": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Port"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "端口"
+        }
+      }
+    }
+  },
+  "Proxy and group names must be nonempty and cannot contain commas or line breaks.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Proxy and group names must be nonempty and cannot contain commas or line breaks."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理和代理组名称不能为空，不能包含逗号、换行或首尾空白。"
+        }
+      }
+    }
+  },
+  "Proxy and group names must be unique.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Proxy and group names must be unique."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理和代理组名称不能重复。"
+        }
+      }
+    }
+  },
+  "Proxy groups cannot reference themselves or form a cycle.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Proxy groups cannot reference themselves or form a cycle."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理组不能引用自身或形成循环引用。"
+        }
+      }
+    }
+  },
+  "Proxy port must be between 1 and 65535.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Proxy port must be between 1 and 65535."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理端口必须在 1 到 65535 之间。"
+        }
+      }
+    }
+  },
+  "Proxy protocol": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Proxy protocol"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理协议"
+        }
+      }
+    }
+  },
+  "Remove member": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Remove member"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "移除成员"
+        }
+      }
+    }
+  },
+  "Retry reading settings": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Retry reading settings"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "重新读取设置"
+        }
+      }
+    }
+  },
+  "Route to": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Route to"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "出口"
+        }
+      }
+    }
+  },
+  "Rule set": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Rule set"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则集"
+        }
+      }
+    }
+  },
+  "Rule sets are downloaded by the core after applying. Add a RULE-SET rule to choose their routing target. Cache paths are managed automatically.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Rule sets are downloaded by the core after applying. Add a RULE-SET rule to choose their routing target. Cache paths are managed automatically."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "应用后由内核下载规则集。添加 RULE-SET 规则指定出口，缓存路径由软件管理。"
+        }
+      }
+    }
+  },
+  "Rule sets need an HTTP or HTTPS URL and a positive update interval.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Rule sets need an HTTP or HTTPS URL and a positive update interval."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则集需要有效的 HTTP 或 HTTPS 地址，更新间隔必须大于零。"
+        }
+      }
+    }
+  },
+  "Rule type": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Rule type"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则类型"
+        }
+      }
+    }
+  },
+  "Rule values must be nonempty and cannot contain commas or line breaks.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Rule values must be nonempty and cannot contain commas or line breaks."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则匹配内容不能为空，不能包含逗号或换行。"
+        }
+      }
+    }
+  },
+  "Rule-set behavior": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Rule-set behavior"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则集内容类型"
+        }
+      }
+    }
+  },
+  "Rule-set download URL": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Rule-set download URL"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则集下载地址"
+        }
+      }
+    }
+  },
+  "Rule-set names must be valid and unique.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Rule-set names must be valid and unique."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "规则集名称不能为空、重复或包含逗号、换行、首尾空白。"
+        }
+      }
+    }
+  },
+  "Rules match from top to bottom, ahead of subscription rules. Put a specific host (/32) before its wider network (/24). No catch-all rule is added.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Rules match from top to bottom, ahead of subscription rules. Put a specific host (/32) before its wider network (/24). No catch-all rule is added."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "按从上到下的顺序匹配，优先于订阅规则。单个 IP（/32）请放在所属网段（/24）前面。不添加兜底规则。"
+        }
+      }
+    }
+  },
+  "SNI (optional)": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "SNI (optional)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "SNI（可选）"
+        }
+      }
+    }
+  },
+  "Save and apply": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Save and apply"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "保存并应用"
+        }
+      }
+    }
+  },
+  "Save and apply to a running local core to test.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Save and apply to a running local core to test."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "保存并应用到运行中的本地内核后可测速"
+        }
+      }
+    }
+  },
+  "Saved. Custom settings apply the next time a local configuration is loaded.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Saved. Custom settings apply the next time a local configuration is loaded."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已保存，下次加载本地配置时应用自定义设置。"
+        }
+      }
+    }
+  },
+  "Server": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Server"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "服务器"
+        }
+      }
+    }
+  },
+  "Skip certificate verification": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Skip certificate verification"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "跳过证书验证"
+        }
+      }
+    }
+  },
+  "Test custom proxies": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Test custom proxies"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "测速全部自定义代理"
+        }
+      }
+    }
+  },
+  "Test failed or timed out": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Test failed or timed out"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "测试失败或超时"
+        }
+      }
+    }
+  },
+  "Test this proxy": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Test this proxy"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "测速此代理"
+        }
+      }
+    }
+  },
+  "The original file will be kept as a local backup. Custom proxies and rules will be disabled before reloading the subscription.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "The original file will be kept as a local backup. Custom proxies and rules will be disabled before reloading the subscription."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "原始文件会保留为本地备份。停用自定义代理与规则后，将重新加载订阅。"
+        }
+      }
+    }
+  },
+  "The subscription already contains a conflicting [Local] proxy or group.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "The subscription already contains a conflicting [Local] proxy or group."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "订阅中存在同名的 [Local] 代理或代理组，请重命名自定义项。"
+        }
+      }
+    }
+  },
+  "The subscription already contains a conflicting [Local] rule set.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "The subscription already contains a conflicting [Local] rule set."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "订阅中存在同名的 [Local] 规则集，请重命名自定义项。"
+        }
+      }
+    }
+  },
+  "The subscription must contain a YAML mapping.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "The subscription must contain a YAML mapping."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "订阅必须是有效的 YAML 配置对象。"
+        }
+      }
+    }
+  },
+  "Timeout (milliseconds)": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Timeout (milliseconds)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "超时（毫秒）"
+        }
+      }
+    }
+  },
+  "Tolerance (milliseconds)": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Tolerance (milliseconds)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "延迟容差（毫秒）"
+        }
+      }
+    }
+  },
+  "UDP forwarding": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "UDP forwarding"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "UDP 转发"
+        }
+      }
+    }
+  },
+  "Unable to back up custom proxy settings.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to back up custom proxy settings."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法备份自定义代理设置。"
+        }
+      }
+    }
+  },
+  "Unable to compose the custom configuration.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to compose the custom configuration."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法生成包含自定义代理的运行配置。"
+        }
+      }
+    }
+  },
+  "Unable to read the current core configuration.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to read the current core configuration."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法读取内核当前配置。"
+        }
+      }
+    }
+  },
+  "Unable to restore the previous configuration:": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to restore the previous configuration:"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法恢复之前的配置："
+        }
+      }
+    }
+  },
+  "Unable to save custom proxy settings.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unable to save custom proxy settings."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "无法保存自定义代理设置。"
+        }
+      }
+    }
+  },
+  "Unsaved changes": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unsaved changes"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "有未保存的更改"
+        }
+      }
+    }
+  },
+  "Unsupported custom configuration version.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unsupported custom configuration version."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "不支持此版本的自定义配置。"
+        }
+      }
+    }
+  },
+  "Unsupported group type.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unsupported group type."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "不支持此代理组类型。"
+        }
+      }
+    }
+  },
+  "Unsupported proxy type.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unsupported proxy type."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "不支持此代理类型。"
+        }
+      }
+    }
+  },
+  "Unsupported rule type.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unsupported rule type."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "不支持此规则类型。"
+        }
+      }
+    }
+  },
+  "Unsupported rule-set behavior.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unsupported rule-set behavior."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "不支持此规则集内容类型。"
+        }
+      }
+    }
+  },
+  "Unsupported rule-set format.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Unsupported rule-set format."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "不支持此规则集格式。"
+        }
+      }
+    }
+  },
+  "Untitled entry": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Untitled entry"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "未命名"
+        }
+      }
+    }
+  },
+  "Update any groups or rules that reference this entry before saving.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Update any groups or rules that reference this entry before saving."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "保存前请更新引用此项的代理组或规则。"
+        }
+      }
+    }
+  },
+  "Update interval (seconds)": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Update interval (seconds)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "更新间隔（秒）"
+        }
+      }
+    }
+  },
+  "Use an internal HTTP or HTTPS URL for work proxies. Leave blank to use the app test URL. Save and apply before testing; timeout is 5 seconds.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Use an internal HTTP or HTTPS URL for work proxies. Leave blank to use the app test URL. Save and apply before testing; timeout is 5 seconds."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "内网代理可填写内网 HTTP / HTTPS 地址；留空使用软件默认测速网址。保存并应用后测速，超时为 5 秒。"
+        }
+      }
+    }
+  },
+  "Username (optional)": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Username (optional)"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "用户名（可选）"
+        }
+      }
+    }
+  },
+  "Wait for the core to finish starting or reloading before saving.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Wait for the core to finish starting or reloading before saving."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请等待内核启动或重载完成后再保存。"
+        }
+      }
+    }
+  },
   "Save DNS settings": {
     "extractionState": "manual",
     "localizations": {

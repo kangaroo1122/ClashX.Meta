@@ -40,6 +40,7 @@ class MenuItemFactory {
         for proxy in info.proxies {
             NotificationCenter.default.post(name: .proxyUpdate(for: proxy.name), object: proxy, userInfo: nil)
         }
+        refreshCustomProxyStatusMenu()
     }
 
     @MainActor
@@ -106,6 +107,7 @@ class MenuItemFactory {
             menuItems.append(collapsedItem)
         }
 
+        if let customMenu = customProxyStatusMenu() { menuItems.append(customMenu) }
         let items = Array(menuItems.reversed())
         updateProxyList(withMenus: items)
 
@@ -135,6 +137,51 @@ class MenuItemFactory {
     }
 
     // MARK: - Private
+
+    @MainActor
+    private static func customProxyStatusMenu() -> NSMenuItem? {
+        let health = CustomProxyHealth.shared
+        guard let config = health.activeConfiguration, !config.proxies.isEmpty else { return nil }
+        let menu = NSMenuItem(title: NSLocalizedString("Custom proxy status", comment: ""), action: nil, keyEquivalent: "")
+        menu.identifier = NSUserInterfaceItemIdentifier("customProxyStatus")
+        let submenu = NSMenu()
+        let all = NSMenuItem(title: NSLocalizedString("Test custom proxies", comment: ""), action: #selector(testAllCustomProxies(_:)), keyEquivalent: "")
+        all.target = MenuItemFactory.self
+        submenu.addItem(all)
+        submenu.addItem(.separator())
+        for proxy in config.proxies {
+            let item = NSMenuItem(title: proxy.name + " — " + health.statusText(for: proxy), action: #selector(testCustomProxy(_:)), keyEquivalent: "")
+            item.target = MenuItemFactory.self
+            item.representedObject = proxy.runtimeName
+            item.toolTip = health.effectiveURL(proxy)
+            submenu.addItem(item)
+        }
+        menu.submenu = submenu
+        return menu
+    }
+
+    @MainActor
+    static func refreshCustomProxyStatusMenu() {
+        guard let statusMenu = AppDelegate.shared.statusMenu else { return }
+        let replacement = customProxyStatusMenu()
+        if let existing = statusMenu.items.first(where: { $0.identifier?.rawValue == "customProxyStatus" }) {
+            existing.submenu = replacement?.submenu
+            existing.isHidden = replacement == nil
+        } else if let replacement, let index = statusMenu.items.firstIndex(of: AppDelegate.shared.sepatatorLineEndProxySelect) {
+            statusMenu.insertItem(replacement, at: index)
+            AppDelegate.shared.sepatatorLineEndProxySelect.isHidden = false
+        }
+    }
+
+    @MainActor @objc private static func testCustomProxy(_ sender: NSMenuItem) {
+        guard let name = sender.representedObject as? String,
+              let proxy = CustomProxyHealth.shared.savedProxy(named: name) else { return }
+        Task { await CustomProxyHealth.shared.test(proxy) }
+    }
+
+    @MainActor @objc private static func testAllCustomProxies(_ sender: NSMenuItem) {
+        Task { await CustomProxyHealth.shared.testAll() }
+    }
 
     // MARK: Updaters
 

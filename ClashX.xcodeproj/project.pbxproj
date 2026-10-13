@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C57000000000000000000004 /* CustomProxySettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C57000000000000000000003 /* CustomProxySettingsViewController.swift */; };
+		C57000000000000000000002 /* CustomProxyConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C57000000000000000000001 /* CustomProxyConfiguration.swift */; };
 		0106179F2AF38EFA005C7877 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49FEC6682AD9369C00BAD9F5 /* Command.swift */; };
 		010C40CD303DEB7A00FCB252 /* DashboardChromeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 010C40CC303DEB7A00FCB252 /* DashboardChromeState.swift */; };
 		010C40CF303DEC5600FCB252 /* DashboardToolbarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 010C40CE303DEC5600FCB252 /* DashboardToolbarController.swift */; };
@@ -240,6 +242,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C57000000000000000000003 /* CustomProxySettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProxySettingsViewController.swift; sourceTree = "<group>"; };
+		C57000000000000000000001 /* CustomProxyConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProxyConfiguration.swift; sourceTree = "<group>"; };
 		010C40CC303DEB7A00FCB252 /* DashboardChromeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardChromeState.swift; sourceTree = "<group>"; };
 		010C40CE303DEC5600FCB252 /* DashboardToolbarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardToolbarController.swift; sourceTree = "<group>"; };
 		01110D9D2FD51EF60015D815 /* meta-rules-dat */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "meta-rules-dat"; sourceTree = "<group>"; };
@@ -869,6 +873,8 @@
 				49CF3B3520CD75DF001EBF94 /* ClashX-Bridging-Header.h */,
 				F9FAB31D262BE04800DE02A6 /* Images.xcassets */,
 				49CCDA292A54F9AC00FF1E13 /* ClashWindowController.swift */,
+				C57000000000000000000003 /* CustomProxySettingsViewController.swift */,
+				C57000000000000000000001 /* CustomProxyConfiguration.swift */,
 			);
 			path = ClashX;
 			sourceTree = "<group>";
@@ -1094,6 +1100,8 @@
 				01F335DE2AD10D0B0048AF77 /* DebugSettingViewController.swift in Sources */,
 				011C61383039B15B00374954 /* AppNameResolver.swift in Sources */,
 				01F335DF2AD10D0B0048AF77 /* ClashWindowController.swift in Sources */,
+				C57000000000000000000004 /* CustomProxySettingsViewController.swift in Sources */,
+				C57000000000000000000002 /* CustomProxyConfiguration.swift in Sources */,
 				01F335E02AD10D0B0048AF77 /* Settings.swift in Sources */,
 				01F335E12AD10D0B0048AF77 /* StatusItemViewProtocol.swift in Sources */,
 				01F335E22AD10D0B0048AF77 /* AppVersionUtil.swift in Sources */,

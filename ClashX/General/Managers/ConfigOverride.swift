@@ -114,22 +114,84 @@ final class ConfigOverride {
         }
     }
 
-    func composeConfig(configName: String, stack: TunStack? = nil, tunEnabled: Bool? = nil, tunIPv6: Bool? = nil) async -> String? {
+    @MainActor private(set) var compositionError: String?
+
+    struct AppliedSnapshot {
+        let yaml: String
+        let custom: CustomProxyConfiguration
+    }
+
+    @MainActor private var prepared: [String: AppliedSnapshot] = [:]
+    @MainActor private var lastApplied: AppliedSnapshot?
+    @MainActor private(set) var runtimeGeneration = 0
+
+    @MainActor
+    func takePreparedConfig(path: String) -> AppliedSnapshot? {
+        prepared.removeValue(forKey: path)
+    }
+
+    @MainActor
+    func recordAppliedConfig(_ snapshot: AppliedSnapshot?) {
+        lastApplied = snapshot
+        CustomProxyHealth.shared.setAppliedConfiguration(snapshot?.custom)
+    }
+
+    @MainActor
+    func forgetAppliedConfig() {
+        lastApplied = nil
+        runtimeGeneration += 1
+    }
+
+    /// Recreate rollback from the successful runtime YAML, never a subscription
+    /// file which may have changed since that successful application.
+    @MainActor
+    func prepareRollback(tunEnabled: Bool) throws -> String? {
+        guard let snapshot = lastApplied else { return nil }
+        guard var yaml = try Yams.compose(yaml: snapshot.yaml) else {
+            throw CustomProxyError("Unable to prepare the previous configuration for rollback.")
+        }
+        applyOverrides(&yaml)
+        yaml["tun"]!["enable"] = .init("\(tunEnabled)")
+        let result = try Yams.serialize(node: yaml)
+        guard let path = RemoteConfigManager.writeRuntimeConfig(string: result, file: .rollback) else {
+            throw CustomProxyError("Unable to prepare the previous configuration for rollback.")
+        }
+        prepared[path] = AppliedSnapshot(yaml: result, custom: snapshot.custom)
+        return path
+    }
+
+    @MainActor
+    func discardPreparedConfig(path: String) {
+        prepared.removeValue(forKey: path)
+    }
+
+    @MainActor
+    func composeConfig(configName: String, stack: TunStack? = nil, tunEnabled: Bool? = nil, tunIPv6: Bool? = nil, custom: CustomProxyConfiguration? = nil) async -> String? {
+        compositionError = nil
         guard let configPath = await ApiRequest.findConfigPath(configName: configName),
               let yamlString = readFileString(configPath),
               var yaml = try? Yams.compose(yaml: yamlString) else {
             return nil
         }
 
-        await applyOverrides(&yaml, stack: stack, tunIPv6: tunIPv6)
+        let customConfiguration: CustomProxyConfiguration
+        do {
+            customConfiguration = try custom ?? CustomProxyStorage.load()
+            try customConfiguration.merge(into: &yaml)
+        } catch {
+            compositionError = error.localizedDescription
+            return nil
+        }
+        applyOverrides(&yaml, stack: stack, tunIPv6: tunIPv6)
         if let tunEnabled {
             yaml["tun"]!["enable"] = .init("\(tunEnabled)")
         }
 
         guard let result = try? Yams.serialize(node: yaml),
-              let path = RemoteConfigManager.createCacheConfig(string: result) else {
+              let path = RemoteConfigManager.writeRuntimeConfig(string: result, file: .runtime) else {
             return nil
         }
+        prepared[path] = AppliedSnapshot(yaml: result, custom: customConfiguration)
         return path
     }
 
@@ -271,6 +333,16 @@ final class TunStackSettings: ObservableObject {
 
     private func apply(stack: TunStack, ipv6: Bool) async {
         guard canEdit, stack != selection || ipv6 != ipv6Enabled else { return }
+        isApplying = true
+        defer { isApplying = false }
+        await ConfigApplyCoordinator.shared.perform {
+            await self.applySerially(stack: stack, ipv6: ipv6)
+        }
+    }
+
+    private func applySerially(stack: TunStack, ipv6: Bool) async {
+        guard RemoteControlManager.selectConfig == nil else { return }
+        guard kernelReady || ConfigManager.shared.kernelState == .stopped || ConfigManager.shared.kernelState == .failedToStart else { return }
         errorMessage = nil
         guard kernelReady else {
             ConfigOverride.shared.tunStack = stack
@@ -280,18 +352,27 @@ final class TunStackSettings: ObservableObject {
             return
         }
 
-        isApplying = true
-        defer { isApplying = false }
         let name = ConfigManager.selectConfigName
-        let previous = selection
-        let previousIPv6 = ipv6Enabled
         // Read the actual enable state: changing the stack must never enable TUN.
-        guard let current = await ApiRequest.requestConfig(),
-              let path = await ConfigOverride.shared.composeConfig(configName: name, stack: stack, tunEnabled: current.tun.enable, tunIPv6: ipv6),
-              let rollbackPath = await ConfigOverride.shared.composeConfig(configName: name, stack: previous, tunEnabled: current.tun.enable, tunIPv6: previousIPv6) else {
+        guard let current = await ApiRequest.requestConfig() else {
             errorMessage = NSLocalizedString("Unable to prepare TUN configuration.", comment: "")
             return
         }
+        let rollbackPath: String?
+        do {
+            rollbackPath = try ConfigOverride.shared.prepareRollback(tunEnabled: current.tun.enable)
+        } catch {
+            errorMessage = error.localizedDescription
+            return
+        }
+        defer {
+            if let rollbackPath { ConfigOverride.shared.discardPreparedConfig(path: rollbackPath) }
+        }
+        guard let path = await ConfigOverride.shared.composeConfig(configName: name, stack: stack, tunEnabled: current.tun.enable, tunIPv6: ipv6) else {
+            errorMessage = NSLocalizedString("Unable to prepare TUN configuration.", comment: "")
+            return
+        }
+        defer { ConfigOverride.shared.discardPreparedConfig(path: path) }
         guard RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name,
               ConfigManager.shared.kernelState == .running else {
             errorMessage = NSLocalizedString("Configuration changed. Please try again.", comment: "")
@@ -332,6 +413,10 @@ final class TunStackSettings: ObservableObject {
             errorMessage = error
             // An unsuccessful reload may have partially applied the configuration.
             if RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name {
+                guard let rollbackPath else {
+                    errorMessage = error + "\n" + NSLocalizedString("No previously applied configuration is available for rollback. Reload a working subscription.", comment: "")
+                    return
+                }
                 if let rollbackError = await ApiRequest.requestConfigUpdate(configPath: rollbackPath) {
                     errorMessage = error + "\n" + NSLocalizedString("Unable to restore TUN configuration:", comment: "") + " " + rollbackError
                 }

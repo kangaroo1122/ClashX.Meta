@@ -190,6 +190,10 @@ final class ProxyManager: NSObject {
     }
 
     func setTunEnabled(_ enabled: Bool) async {
+        await ConfigApplyCoordinator.shared.perform { await self.setTunEnabledSerially(enabled) }
+    }
+
+    private func setTunEnabledSerially(_ enabled: Bool) async {
         if enabled {
             let allowed = await SSIDSuspendTool.shared.checkAndHandleOverride(
                 isTun: true, requestedEnable: enabled)
@@ -215,6 +219,10 @@ final class ProxyManager: NSObject {
 
     /// Reconcile all proxy states after config load, network change, or wakeup.
     func reconcileState() async {
+        await ConfigApplyCoordinator.shared.perform { await self.reconcileStateSerially() }
+    }
+
+    private func reconcileStateSerially() async {
         await syncTunState()
         syncSystemProxyState()
 
@@ -231,6 +239,10 @@ final class ProxyManager: NSObject {
     // MARK: - SSID Suspend
 
     func setSuspended(_ suspended: Bool) async {
+        await ConfigApplyCoordinator.shared.perform { await self.setSuspendedSerially(suspended) }
+    }
+
+    private func setSuspendedSerially(_ suspended: Bool) async {
         guard suspended != suspendState.isSuspended else { return }
         suspendState.isSuspended = suspended
         await reconcileState()

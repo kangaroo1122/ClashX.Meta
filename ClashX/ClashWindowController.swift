@@ -7,6 +7,11 @@
 //
 import AppKit
 
+@MainActor
+protocol WindowCloseConfirming: AnyObject {
+    func shouldCloseWindow() -> Bool
+}
+
 private class ClashWindowsRecorder {
     static let shared = ClashWindowsRecorder()
     var windowControllers = [NSWindowController]() {
@@ -73,6 +78,10 @@ class ClashWindowController<T: NSViewController>: NSWindowController, NSWindowDe
         window?.delegate = self
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
+    }
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        (contentViewController as? WindowCloseConfirming)?.shouldCloseWindow() ?? true
     }
 
     func windowWillClose(_ notification: Notification) {

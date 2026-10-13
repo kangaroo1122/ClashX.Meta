@@ -124,6 +124,12 @@ class ApiRequest {
     }
 
     static func requestConfigUpdate(configName: String) async -> ErrorString? {
+        return await ConfigApplyCoordinator.shared.perform {
+            await requestConfigUpdateSeriallyConfigName(configName: configName)
+        }
+    }
+
+    private static func requestConfigUpdateSeriallyConfigName(configName: String) async -> ErrorString? {
         guard let path = await findConfigPath(configName: configName) else {
             return "icloud error"
         }
@@ -148,6 +154,24 @@ class ApiRequest {
     }
 
     static func requestConfigUpdate(configPath: String) async -> ErrorString? {
+        return await ConfigApplyCoordinator.shared.perform {
+            await requestConfigUpdateSeriallyConfigPath(configPath: configPath)
+        }
+    }
+
+    @MainActor
+    private static func requestConfigUpdateSeriallyConfigPath(configPath: String) async -> ErrorString? {
+        let local = RemoteControlManager.selectConfig == nil
+        let snapshot = ConfigOverride.shared.takePreparedConfig(path: configPath)
+        if local {
+            CustomProxyHealth.shared.beginConfigurationUpdate()
+        } else {
+            CustomProxyHealth.shared.invalidate()
+        }
+        defer {
+            if local { CustomProxyHealth.shared.endConfigurationUpdate() }
+        }
+        let generation = ConfigOverride.shared.runtimeGeneration
         let placeHolderErrorDesp = "Error occoured, Please try to fix it by restarting ClashX. "
 
         let response = await req(
@@ -159,6 +183,14 @@ class ApiRequest {
             .response
 
         if response.httpResponse?.statusCode == 204 {
+            if local {
+                // A stream disconnection does not invalidate a successful PUT.
+                // The generation changes only when the local process restarts.
+                guard generation == ConfigOverride.shared.runtimeGeneration else {
+                    return NSLocalizedString("Configuration changed. Please try again.", comment: "")
+                }
+                ConfigOverride.shared.recordAppliedConfig(snapshot)
+            }
             return nil
         }
 
@@ -170,6 +202,12 @@ class ApiRequest {
     }
 
     static func updateOutBoundMode(mode: ClashProxyMode) async -> Bool {
+        return await ConfigApplyCoordinator.shared.perform {
+            await updateOutBoundModeSeriallyMode(mode: mode)
+        }
+    }
+
+    private static func updateOutBoundModeSeriallyMode(mode: ClashProxyMode) async -> Bool {
         let response = await req(
             "/configs",
             method: .PATCH,
@@ -182,6 +220,12 @@ class ApiRequest {
     }
 
     static func updateLogLevel(level: ClashLogLevel) async -> Bool {
+        return await ConfigApplyCoordinator.shared.perform {
+            await updateLogLevelSeriallyLevel(level: level)
+        }
+    }
+
+    private static func updateLogLevelSeriallyLevel(level: ClashLogLevel) async -> Bool {
         let response = await req(
             "/configs",
             method: .PATCH,
@@ -227,6 +271,12 @@ class ApiRequest {
     }
 
     static func updateAllowLan(allow: Bool) async {
+        await ConfigApplyCoordinator.shared.perform {
+            await updateAllowLanSeriallyAllow(allow: allow)
+        }
+    }
+
+    private static func updateAllowLanSeriallyAllow(allow: Bool) async {
         Logger.log("update allow lan:\(allow)", level: .debug)
         do {
             _ = try await req(
@@ -263,17 +313,24 @@ class ApiRequest {
     }
 
     static func getProxyDelay(proxyName: String) async -> Int {
+        if let proxy = await CustomProxyHealth.shared.savedProxy(named: proxyName) {
+            return await CustomProxyHealth.shared.test(proxy) ?? 0
+        }
+        return await requestProxyDelay(proxyName: proxyName, url: ConfigManager.shared.benchMarkUrl, timeout: 2500) ?? 0
+    }
+
+    static func requestProxyDelay(proxyName: String, url: String, timeout: Int) async -> Int? {
         do {
             let data = try await req(
                 "/proxies/\(proxyName.encoded)/delay",
                 method: .GET,
-                parameters: ["timeout": 2500, "url": ConfigManager.shared.benchMarkUrl]
+                parameters: ["timeout": timeout, "url": url]
             )
             .validate()
             .responseData
-            return JSON(data)["delay"].intValue
+            return JSON(data)["delay"].int
         } catch {
-            return 0
+            return nil
         }
     }
 
@@ -438,6 +495,12 @@ extension ApiRequest {
     }
 
     static func updateTun(enable: Bool) async {
+        await ConfigApplyCoordinator.shared.perform {
+            await updateTunSeriallyEnable(enable: enable)
+        }
+    }
+
+    private static func updateTunSeriallyEnable(enable: Bool) async {
         Logger.log("update tun:\(enable)", level: .debug)
         do {
             _ = try await req(
@@ -454,6 +517,12 @@ extension ApiRequest {
     }
 
     static func updateSniffing(enable: Bool) async {
+        await ConfigApplyCoordinator.shared.perform {
+            await updateSniffingSeriallyEnable(enable: enable)
+        }
+    }
+
+    private static func updateSniffingSeriallyEnable(enable: Bool) async {
         Logger.log("update sniffing:\(enable)", level: .debug)
         do {
             _ = try await req(
