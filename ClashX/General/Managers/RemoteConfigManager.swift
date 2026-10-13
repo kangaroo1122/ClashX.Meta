@@ -235,7 +235,7 @@ class RemoteConfigManager {
             }
             if fm.fileExists(atPath: destination.path) {
                 // Keep the staged file's private permissions when replacing.
-                _ = try fm.replaceItemAt(destination, withItemAt: staged, options: .usingNewMetadata)
+                _ = try fm.replaceItemAt(destination, withItemAt: staged, options: .usingNewMetadataOnly)
             } else {
                 try fm.moveItem(at: staged, to: destination)
             }
