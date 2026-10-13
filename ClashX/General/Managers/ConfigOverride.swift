@@ -373,25 +373,33 @@ final class TunStackSettings: ObservableObject {
             return
         }
         defer { ConfigOverride.shared.discardPreparedConfig(path: path) }
-        guard RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name,
-              ConfigManager.shared.kernelState == .running else {
+        let generation = ConfigOverride.shared.runtimeGeneration
+        func stillCurrent(allowDisconnected: Bool = false) -> Bool {
+            let state = ConfigManager.shared.kernelState
+            return RemoteControlManager.selectConfig == nil && ConfigManager.selectConfigName == name
+                && ConfigOverride.shared.runtimeGeneration == generation
+                && (state == .running || (allowDisconnected && state == .disconnected))
+        }
+        guard stillCurrent() else {
             errorMessage = NSLocalizedString("Configuration changed. Please try again.", comment: "")
             return
         }
 
         var applyError = await ApiRequest.requestConfigUpdate(configPath: path)
-        guard RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name,
-              ConfigManager.shared.kernelState == .running else {
+        guard stillCurrent(allowDisconnected: true) else {
             errorMessage = NSLocalizedString("Configuration changed. Please try again.", comment: "")
             return
         }
-        if applyError == nil, RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name {
-            if let applied = await ApiRequest.requestConfig() {
-                guard RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name,
-                      ConfigManager.shared.kernelState == .running else {
-                    errorMessage = NSLocalizedString("Configuration changed. Please try again.", comment: "")
-                    return
-                }
+        // A successful PUT remains authoritative if the stream disconnects.
+        // Verify when reachable; never skip persistence solely due to that
+        // temporary connection state, including a disconnect during the GET.
+        if applyError == nil, stillCurrent() {
+            let applied = await ApiRequest.requestConfig()
+            guard stillCurrent(allowDisconnected: true) else {
+                errorMessage = NSLocalizedString("Configuration changed. Please try again.", comment: "")
+                return
+            }
+            if let applied {
                 ConfigManager.shared.currentConfig = applied
                 if stack != .followConfig && applied.tun.stack.lowercased() != stack.rawValue {
                     applyError = NSLocalizedString("The core did not apply the selected TUN stack.", comment: "")
@@ -405,14 +413,14 @@ final class TunStackSettings: ObservableObject {
                         applyError = NSLocalizedString("The core did not apply the TUN IPv6 setting.", comment: "")
                     }
                 }
-            } else {
+            } else if stillCurrent() {
                 applyError = NSLocalizedString("Unable to verify the TUN configuration.", comment: "")
             }
         }
         if let error = applyError {
             errorMessage = error
             // An unsuccessful reload may have partially applied the configuration.
-            if RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name {
+            if stillCurrent(allowDisconnected: true) {
                 guard let rollbackPath else {
                     errorMessage = error + "\n" + NSLocalizedString("No previously applied configuration is available for rollback. Reload a working subscription.", comment: "")
                     return
@@ -420,7 +428,7 @@ final class TunStackSettings: ObservableObject {
                 if let rollbackError = await ApiRequest.requestConfigUpdate(configPath: rollbackPath) {
                     errorMessage = error + "\n" + NSLocalizedString("Unable to restore TUN configuration:", comment: "") + " " + rollbackError
                 }
-                await ConfigReloadManager.shared.handleClashConfigUpdated(preserveProxyState: true)
+                if stillCurrent() { await ConfigReloadManager.shared.handleClashConfigUpdated(preserveProxyState: true) }
             }
             return
         }
@@ -429,7 +437,7 @@ final class TunStackSettings: ObservableObject {
         selection = stack
         ConfigOverride.shared.tunIPv6Enabled = ipv6
         ipv6Enabled = ipv6
-        if RemoteControlManager.selectConfig == nil, ConfigManager.selectConfigName == name {
+        if stillCurrent() {
             await ConfigReloadManager.shared.handleClashConfigUpdated(preserveProxyState: true)
         }
     }

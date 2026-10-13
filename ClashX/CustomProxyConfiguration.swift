@@ -22,6 +22,11 @@ struct CustomProxyConfiguration: Codable, Equatable {
         }
         let names = proxies.map(\.name) + groups.map(\.name)
         try require(version == 1, "Unsupported custom configuration version.")
+        // Imported identifiers also drive list selection, health results and
+        // provider cache paths, so duplicates must not reach the editor.
+        for ids in [proxies.map(\.id), groups.map(\.id), rules.map(\.id), providers.map(\.id)] {
+            try require(Set(ids).count == ids.count, "Custom configuration contains duplicate entry identifiers.")
+        }
         try require(names.allSatisfy(validName), "Proxy and group names must be nonempty and cannot contain commas or line breaks.")
         try require(Set(names).count == names.count, "Proxy and group names must be unique.")
         try require(Set(names).isDisjoint(with: ["DIRECT", "REJECT", "GLOBAL", "REJECT-DROP", "PASS", "COMPATIBLE"]), "A proxy or group uses a reserved name.")
@@ -262,19 +267,57 @@ enum CustomProxyStorage {
 
     static func save(_ value: CustomProxyConfiguration) throws {
         let data = try JSONEncoder().encode(value)
+        try writePrivateFile(data, to: url)
+    }
+
+    static func importConfiguration(from source: URL) throws -> CustomProxyConfiguration {
+        let accessing = source.startAccessingSecurityScopedResource()
+        defer { if accessing { source.stopAccessingSecurityScopedResource() } }
+        let data = try Data(contentsOf: source)
+        // Read the version first so a newer format gets a useful error even
+        // when its remaining fields no longer match this model.
+        struct Header: Decodable { let version: Int }
+        let decoder = JSONDecoder()
+        let value: CustomProxyConfiguration
+        do {
+            let header = try decoder.decode(Header.self, from: data)
+            guard header.version == 1 else { throw CustomProxyError("Unsupported custom configuration version.") }
+            value = try decoder.decode(CustomProxyConfiguration.self, from: data)
+        } catch is DecodingError {
+            throw CustomProxyError("Choose a valid ClashX custom proxy configuration JSON file.")
+        }
+        // Validate disabled configurations too before presenting imported data.
+        try value.validate()
+        return value
+    }
+
+    static func exportConfiguration(_ value: CustomProxyConfiguration, to destination: URL) throws {
+        try value.validate()
+        let accessing = destination.startAccessingSecurityScopedResource()
+        defer { if accessing { destination.stopAccessingSecurityScopedResource() } }
+        // Export must never bypass Save and apply by replacing the live store.
+        guard destination.resolvingSymlinksInPath().standardizedFileURL != url.resolvingSymlinksInPath().standardizedFileURL else {
+            throw CustomProxyError("Choose an export location different from the app's custom settings file.")
+        }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try writePrivateFile(encoder.encode(value), to: destination)
+    }
+
+    private static func writePrivateFile(_ data: Data, to destination: URL) throws {
         let fm = FileManager.default
-        try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
         // Stage with owner-only permissions before atomically replacing a file
         // which may contain proxy credentials. Never store them in logs.
-        let staged = url.deletingLastPathComponent().appendingPathComponent(".custom-proxies-\(UUID().uuidString).json")
+        let staged = destination.deletingLastPathComponent().appendingPathComponent(".custom-proxies-\(UUID().uuidString).json")
         defer { try? fm.removeItem(at: staged) }
         guard fm.createFile(atPath: staged.path, contents: data, attributes: [.posixPermissions: 0o600]) else {
             throw CustomProxyError("Unable to save custom proxy settings.")
         }
-        if fm.fileExists(atPath: url.path) {
-            _ = try fm.replaceItemAt(url, withItemAt: staged)
+        if fm.fileExists(atPath: destination.path) {
+            _ = try fm.replaceItemAt(destination, withItemAt: staged, options: .usingNewMetadataOnly)
         } else {
-            try fm.moveItem(at: staged, to: url)
+            try fm.moveItem(at: staged, to: destination)
         }
     }
 }

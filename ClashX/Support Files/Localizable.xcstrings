@@ -1,6 +1,305 @@
 {
   "sourceLanguage": "en",
   "strings": {
+  "Custom configuration contains duplicate entry identifiers.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom configuration contains duplicate entry identifiers."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自定义配置包含重复的条目标识。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自訂配置包含重複的項目識別碼。"
+        }
+      }
+    }
+  },
+  "Choose a valid ClashX custom proxy configuration JSON file.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Choose a valid ClashX custom proxy configuration JSON file."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请选择有效的 ClashX 自定义代理配置 JSON 文件。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "請選擇有效的 ClashX 自訂代理配置 JSON 檔案。"
+        }
+      }
+    }
+  },
+  "Choose an export location different from the app's custom settings file.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Choose an export location different from the app's custom settings file."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "请选择其他导出位置，不要覆盖软件正在使用的自定义配置文件。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "請選擇其他匯出位置，不要覆蓋軟體正在使用的自訂配置檔案。"
+        }
+      }
+    }
+  },
+  "Import a ClashX custom configuration. Review it before saving and applying.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Import a ClashX custom configuration. Review it before saving and applying."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "导入 ClashX 自定义配置。请检查内容后再保存并应用。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "匯入 ClashX 自訂配置。請檢查內容後再儲存並套用。"
+        }
+      }
+    }
+  },
+  "Replace the current custom configuration draft?": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Replace the current custom configuration draft?"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "替换当前自定义配置草稿？"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "取代目前的自訂配置草稿？"
+        }
+      }
+    }
+  },
+  "Proxies: %ld · Groups: %ld · Rules: %ld · Rule sets: %ld": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Proxies: %ld · Groups: %ld · Rules: %ld · Rule sets: %ld"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理：%ld · 代理组：%ld · 规则：%ld · 规则集：%ld"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "代理：%ld · 代理群組：%ld · 規則：%ld · 規則集：%ld"
+        }
+      }
+    }
+  },
+  "This replaces all entries and the enable setting in the editor, including unsaved changes. Saved settings and the running core change only after Save and apply.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "This replaces all entries and the enable setting in the editor, including unsaved changes. Saved settings and the running core change only after Save and apply."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "这将替换编辑器中的全部条目和启用状态，包括未保存的修改。点击“保存并应用”后，才会更改已保存的配置和正在运行的内核。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "這將取代編輯器中的全部項目和啟用狀態，包括尚未儲存的修改。點擊「儲存並套用」後，才會變更已儲存的配置和正在執行的核心。"
+        }
+      }
+    }
+  },
+  "Replace draft": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Replace draft"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "替换草稿"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "取代草稿"
+        }
+      }
+    }
+  },
+  "Imported into the editor. Review the settings, then choose Save and apply.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Imported into the editor. Review the settings, then choose Save and apply."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已导入编辑器。请检查配置，然后点击“保存并应用”。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "已匯入編輯器。請檢查配置，然後點擊「儲存並套用」。"
+        }
+      }
+    }
+  },
+  "Exports the current editor contents, including unsaved changes. The file contains unencrypted proxy passwords; transfer and store it securely.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Exports the current editor contents, including unsaved changes. The file contains unencrypted proxy passwords; transfer and store it securely."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "导出当前编辑内容，包括未保存的修改。文件包含未加密的代理密码，请妥善传输和保管。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "匯出目前的編輯內容，包括尚未儲存的修改。檔案包含未加密的代理密碼，請妥善傳輸和保管。"
+        }
+      }
+    }
+  },
+  "Custom configuration exported. The file includes proxy credentials.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Custom configuration exported. The file includes proxy credentials."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自定义配置已导出。文件包含代理凭据。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "自訂配置已匯出。檔案包含代理憑證。"
+        }
+      }
+    }
+  },
+  "Import configuration…": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Import configuration…"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "导入配置…"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "匯入配置…"
+        }
+      }
+    }
+  },
+  "Export configuration…": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Export configuration…"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "导出配置…"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "匯出配置…"
+        }
+      }
+    }
+  },
   "Unable to prepare the previous configuration for rollback.": {
     "extractionState": "manual",
     "localizations": {

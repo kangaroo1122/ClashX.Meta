@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 @MainActor
 final class CustomProxyEditor: ObservableObject {
@@ -9,8 +10,10 @@ final class CustomProxyEditor: ObservableObject {
     @Published private(set) var isError = false
     @Published private(set) var isSaving = false
     @Published private(set) var loadFailed = false
+    @Published private var isTransferring = false
 
     var isDirty: Bool { draft != saved }
+    var isBusy: Bool { isSaving || isTransferring }
 
     init() { reload() }
 
@@ -32,8 +35,55 @@ final class CustomProxyEditor: ObservableObject {
         isError = error
     }
 
+    func importConfiguration() {
+        guard !isBusy, !loadFailed else { return }
+        isTransferring = true
+        defer { isTransferring = false }
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.message = NSLocalizedString("Import a ClashX custom configuration. Review it before saving and applying.", comment: "")
+        guard panel.runModal() == .OK, let source = panel.url else { return }
+        do {
+            let candidate = try CustomProxyStorage.importConfiguration(from: source)
+            let alert = NSAlert()
+            alert.messageText = NSLocalizedString("Replace the current custom configuration draft?", comment: "")
+            let counts = String(format: NSLocalizedString("Proxies: %ld · Groups: %ld · Rules: %ld · Rule sets: %ld", comment: "Import summary"),
+                                candidate.proxies.count, candidate.groups.count, candidate.rules.count, candidate.providers.count)
+            alert.informativeText = counts + "\n\n" + NSLocalizedString("This replaces all entries and the enable setting in the editor, including unsaved changes. Saved settings and the running core change only after Save and apply.", comment: "")
+            alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
+            alert.addButton(withTitle: NSLocalizedString("Replace draft", comment: ""))
+            guard alert.runModal() == .alertSecondButtonReturn else { return }
+            draft = candidate
+            report(NSLocalizedString("Imported into the editor. Review the settings, then choose Save and apply.", comment: ""))
+        } catch {
+            report(error.localizedDescription, error: true)
+        }
+    }
+
+    func exportConfiguration() {
+        guard !isBusy, !loadFailed else { return }
+        isTransferring = true
+        defer { isTransferring = false }
+        do {
+            let candidate = draft
+            try candidate.validate()
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.json]
+            panel.nameFieldStringValue = "ClashX-custom-proxies.json"
+            panel.canCreateDirectories = true
+            panel.message = NSLocalizedString("Exports the current editor contents, including unsaved changes. The file contains unencrypted proxy passwords; transfer and store it securely.", comment: "")
+            guard panel.runModal() == .OK, let destination = panel.url else { return }
+            try CustomProxyStorage.exportConfiguration(candidate, to: destination)
+            report(NSLocalizedString("Custom configuration exported. The file includes proxy credentials.", comment: ""))
+        } catch {
+            report(error.localizedDescription, error: true)
+        }
+    }
+
     func save() async {
-        guard !isSaving, !loadFailed else { return }
+        guard !isBusy, !loadFailed else { return }
         isSaving = true
         defer { isSaving = false }
         let candidate = draft
@@ -96,7 +146,7 @@ final class CustomProxyEditor: ObservableObject {
     }
 
     func recover() async {
-        guard loadFailed, !isSaving else { return }
+        guard loadFailed, !isBusy else { return }
         isSaving = true
         defer { isSaving = false }
         do {
@@ -137,7 +187,7 @@ final class CustomProxySettingsViewController: NSViewController, WindowCloseConf
     }
 
     func shouldCloseWindow() -> Bool {
-        guard !editor.isSaving else { return false }
+        guard !editor.isBusy else { return false }
         guard editor.isDirty else { return true }
         let alert = NSAlert()
         alert.messageText = NSLocalizedString("Discard unsaved custom proxy changes?", comment: "")
@@ -154,8 +204,15 @@ private struct CustomProxySettingsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Toggle("Enable custom proxies and rules", isOn: $editor.draft.enabled)
-                .font(.headline)
+            HStack {
+                Toggle("Enable custom proxies and rules", isOn: $editor.draft.enabled)
+                    .font(.headline)
+                Spacer()
+                Button("Import configuration…") { editor.importConfiguration() }
+                    .disabled(editor.loadFailed)
+                Button("Export configuration…") { editor.exportConfiguration() }
+                    .disabled(editor.loadFailed)
+            }
             Text("Applied to every local subscription. Custom rules run first; unmatched traffic follows the subscription. Use Rule mode for routing.")
                 .font(.callout).foregroundColor(.secondary)
             TabView {
@@ -196,7 +253,7 @@ private struct CustomProxySettingsView: View {
             }
         }
         .padding(20)
-        .disabled(editor.isSaving)
+        .disabled(editor.isBusy)
         .alert("Back up and disable custom settings?", isPresented: $confirmRecovery) {
             Button("Cancel", role: .cancel) {}
             Button("Back up and disable") { Task { await editor.recover() } }
