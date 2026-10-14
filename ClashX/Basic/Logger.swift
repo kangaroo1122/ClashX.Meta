@@ -133,7 +133,7 @@ class Logger {
         let logsRoot = "\(kConfigFolderPath)logs/"
         guard let contents = try? FileManager.default.contentsOfDirectory(atPath: logsRoot) else { return }
 
-        let maxCount = 20
+        let maxCount = 10
         let sorted = contents
             .filter { $0.contains("-") }
             .sorted(by: >)
