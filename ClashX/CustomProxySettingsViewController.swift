@@ -4,6 +4,8 @@ import UniformTypeIdentifiers
 
 @MainActor
 final class CustomProxyEditor: ObservableObject {
+    static let shared = CustomProxyEditor()
+    @Published var selectedTab = 0
     @Published var draft = CustomProxyConfiguration()
     @Published private(set) var saved = CustomProxyConfiguration()
     @Published private(set) var message = ""
@@ -24,6 +26,7 @@ final class CustomProxyEditor: ObservableObject {
             saved = value
             loadFailed = false
             message = ""
+            isError = false
         } catch {
             loadFailed = true
             report(error.localizedDescription, error: true)
@@ -49,8 +52,8 @@ final class CustomProxyEditor: ObservableObject {
             let candidate = try CustomProxyStorage.importConfiguration(from: source)
             let alert = NSAlert()
             alert.messageText = NSLocalizedString("Replace the current custom configuration draft?", comment: "")
-            let counts = String(format: NSLocalizedString("Proxies: %ld · Groups: %ld · Rules: %ld · Rule sets: %ld", comment: "Import summary"),
-                                candidate.proxies.count, candidate.groups.count, candidate.rules.count, candidate.providers.count)
+            let counts = String(format: NSLocalizedString("Proxies: %ld · Proxy groups: %ld · Rules: %ld · Rule groups: %ld · Rule sets: %ld", comment: "Import summary"),
+                                candidate.proxies.count, candidate.groups.count, candidate.rules.count, candidate.ruleGroups.count, candidate.providers.count)
             alert.informativeText = counts + "\n\n" + NSLocalizedString("This replaces all entries and the enable setting in the editor, including unsaved changes. Saved settings and the running core change only after Save and apply.", comment: "")
             alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
             alert.addButton(withTitle: NSLocalizedString("Replace draft", comment: ""))
@@ -85,9 +88,58 @@ final class CustomProxyEditor: ObservableObject {
     func save() async {
         guard !isBusy, !loadFailed else { return }
         isSaving = true
-        defer { isSaving = false }
+        defer {
+            isSaving = false
+            MenuItemFactory.refreshRuleGroupMenu()
+        }
         let candidate = draft
         await ConfigApplyCoordinator.shared.perform { await self.apply(candidate) }
+    }
+
+    /// Menu actions share the editor and its transaction, never overwrite an
+    /// unsaved draft, and only commit the checkmark after apply/persist succeeds.
+    func toggleRuleGroup(id: UUID, expectedEnabled: Bool) async {
+        guard !isBusy else { return }
+        if isDirty {
+            let alert = NSAlert()
+            alert.messageText = NSLocalizedString("Save or discard your draft before switching rule groups.", comment: "")
+            alert.addButton(withTitle: NSLocalizedString("Manage rules…", comment: ""))
+            alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
+            alert.addButton(withTitle: NSLocalizedString("Discard draft and switch", comment: ""))
+            let response = alert.runModal()
+            if response == .alertFirstButtonReturn {
+                selectedTab = 2
+                ClashWindowController<CustomProxySettingsViewController>.create().showWindow(nil)
+                return
+            }
+            guard response == .alertThirdButtonReturn else { return }
+        }
+        isSaving = true
+        defer {
+            isSaving = false
+            MenuItemFactory.refreshRuleGroupMenu()
+        }
+        await ConfigApplyCoordinator.shared.perform {
+            self.reload()
+            guard !self.loadFailed, RemoteControlManager.selectConfig == nil,
+                  ConfigManager.shared.kernelState == .running,
+                  self.saved.enabled, CustomProxyHealth.shared.hasApplied(self.saved),
+                  let index = self.saved.ruleGroups.firstIndex(where: { $0.id == id }),
+                  self.saved.ruleGroups[index].enabled == expectedEnabled else {
+                self.report(NSLocalizedString("Save and apply the current custom configuration before switching rule groups.", comment: ""), error: true)
+                return
+            }
+            var candidate = self.saved
+            candidate.ruleGroups[index].enabled.toggle()
+            await self.apply(candidate)
+            if !self.isError { self.draft = self.saved }
+        }
+        if isError {
+            let alert = NSAlert()
+            alert.messageText = NSLocalizedString("Unable to switch rule group", comment: "")
+            alert.informativeText = message
+            alert.runModal()
+        }
     }
 
     private func apply(_ candidate: CustomProxyConfiguration) async {
@@ -172,7 +224,7 @@ final class CustomProxyEditor: ObservableObject {
 }
 
 final class CustomProxySettingsViewController: NSViewController, WindowCloseConfirming {
-    private let editor = CustomProxyEditor()
+    private let editor = CustomProxyEditor.shared
 
     override func loadView() {
         title = NSLocalizedString("Custom proxies and rules", comment: "")
@@ -184,6 +236,7 @@ final class CustomProxySettingsViewController: NSViewController, WindowCloseConf
     override func viewDidAppear() {
         super.viewDidAppear()
         view.window?.contentMinSize = NSSize(width: 800, height: 560)
+        if !editor.isDirty && !editor.isBusy { editor.reload() }
     }
 
     func shouldCloseWindow() -> Bool {
@@ -193,7 +246,9 @@ final class CustomProxySettingsViewController: NSViewController, WindowCloseConf
         alert.messageText = NSLocalizedString("Discard unsaved custom proxy changes?", comment: "")
         alert.addButton(withTitle: NSLocalizedString("Keep editing", comment: ""))
         alert.addButton(withTitle: NSLocalizedString("Discard changes", comment: ""))
-        return alert.runModal() == .alertSecondButtonReturn
+        guard alert.runModal() == .alertSecondButtonReturn else { return false }
+        editor.reload()
+        return true
     }
 }
 
@@ -215,19 +270,18 @@ private struct CustomProxySettingsView: View {
             }
             Text("Applied to every local subscription. Custom rules run first; unmatched traffic follows the subscription. Use Rule mode for routing.")
                 .font(.callout).foregroundColor(.secondary)
-            TabView {
+            TabView(selection: $editor.selectedTab) {
                 CustomEntryList(items: $editor.draft.proxies, makeItem: { CustomProxyEntry() }, label: { $0.name }, status: { health.statusText(for: $0) }) { item in
                     ProxyEntryForm(proxy: item)
-                }.tabItem { Text("Custom proxies") }
+                }.tabItem { Text("Custom proxies") }.tag(0)
                 CustomEntryList(items: $editor.draft.groups, makeItem: { CustomProxyGroup() }, label: { $0.name }) { item in
                     ProxyGroupForm(group: item, targets: editor.draft.targets)
-                }.tabItem { Text("Custom proxy groups") }
-                CustomEntryList(items: $editor.draft.rules, makeItem: { CustomProxyRule() }, label: { "\($0.type) · \($0.value) → \($0.target)" }) { item in
-                    ProxyRuleForm(rule: item, targets: editor.draft.targets, providers: editor.draft.providers.map(\.name))
-                }.tabItem { Text("Custom rules") }
+                }.tabItem { Text("Custom proxy groups") }.tag(1)
+                CustomRulesView(configuration: $editor.draft)
+                    .tabItem { Text("Custom rules") }.tag(2)
                 CustomEntryList(items: $editor.draft.providers, makeItem: { CustomRuleProvider() }, label: { $0.name }) { item in
                     RuleProviderForm(provider: item)
-                }.tabItem { Text("Custom rule sets") }
+                }.tabItem { Text("Custom rule sets") }.tag(3)
             }
             .disabled(editor.isSaving || editor.loadFailed)
             if !editor.message.isEmpty {
@@ -419,12 +473,226 @@ private struct ProxyGroupForm: View {
     }
 }
 
+private struct CustomRulesView: View {
+    private enum Filter: Hashable {
+        case all, ungrouped, group(UUID)
+    }
+
+    @Binding var configuration: CustomProxyConfiguration
+    @State private var filter: Filter? = .all
+    @State private var selectedRule: UUID?
+    @State private var deletingGroup: UUID?
+    @State private var confirmDeleteGroup = false
+    @State private var deletingRule: UUID?
+    @State private var confirmDeleteRule = false
+
+    private var selectedGroupID: UUID? {
+        if case let .group(id) = filter ?? .all { return id }
+        return nil
+    }
+
+    private var visibleRules: [CustomProxyRule] {
+        configuration.rules.filter { rule in
+            switch filter ?? .all {
+            case .all: return true
+            case .ungrouped: return rule.groupID == nil
+            case let .group(id): return rule.groupID == id
+            }
+        }
+    }
+
+    private var selectedIndex: Int? {
+        configuration.rules.firstIndex { $0.id == selectedRule }
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            sidebar.frame(width: 210)
+            Divider()
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Rules match in global order. Reorder in All rules.")
+                    .font(.caption).foregroundColor(.secondary)
+                ruleTable.frame(minHeight: 130)
+                HStack {
+                    Button { addRule() } label: { Image(systemName: "plus") }
+                        .help("Add entry")
+                    Button {
+                        deletingRule = selectedRule
+                        confirmDeleteRule = true
+                    } label: { Image(systemName: "minus") }
+                        .disabled(selectedRule == nil).help("Delete entry")
+                    Spacer()
+                    Button { moveRule(-1) } label: { Image(systemName: "arrow.up") }
+                        .disabled(filter != .all || selectedIndex == nil || selectedIndex == 0)
+                        .help("Move up")
+                    Button { moveRule(1) } label: { Image(systemName: "arrow.down") }
+                        .disabled(filter != .all || selectedIndex == nil || selectedIndex == configuration.rules.count - 1)
+                        .help("Move down")
+                }
+                Divider()
+                ScrollView {
+                    if let index = selectedIndex {
+                        let rule = configuration.rules[index]
+                        ProxyRuleForm(rule: Binding(get: {
+                            configuration.rules.first { $0.id == rule.id } ?? rule
+                        }, set: { value in
+                            if let index = configuration.rules.firstIndex(where: { $0.id == rule.id }) {
+                                configuration.rules[index] = value
+                            }
+                        }), targets: configuration.targets, providers: configuration.providers.map(\.name),
+                                      ruleGroups: configuration.ruleGroups)
+                    } else {
+                        Text("Add or select an entry to edit its settings.")
+                            .foregroundColor(.secondary).padding(20)
+                    }
+                }.frame(minHeight: 180, maxHeight: 235)
+            }.padding(12)
+        }
+        .onChange(of: visibleRules.map(\.id)) { ids in
+            if let selectedRule, !ids.contains(selectedRule) { self.selectedRule = nil }
+        }
+        .onChange(of: configuration.ruleGroups.map(\.id)) { ids in
+            if let selectedGroupID, !ids.contains(selectedGroupID) { filter = .all }
+        }
+        .alert("Delete this rule group?", isPresented: $confirmDeleteGroup) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                guard let id = deletingGroup else { return }
+                configuration.ruleGroups.removeAll { $0.id == id }
+                for index in configuration.rules.indices where configuration.rules[index].groupID == id {
+                    configuration.rules[index].groupID = nil
+                }
+                filter = .all
+            }
+        } message: {
+            Text("Its rules will move to Ungrouped and become enabled after saving. Their global order is preserved.")
+        }
+        .alert("Delete this entry?", isPresented: $confirmDeleteRule) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                configuration.rules.removeAll { $0.id == deletingRule }
+                selectedRule = nil
+            }
+        }
+    }
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            List(selection: $filter) {
+                Text("All rules").tag(Filter.all)
+                Text("Ungrouped").tag(Filter.ungrouped)
+                Section("Rule groups") {
+                    ForEach($configuration.ruleGroups) { $group in
+                        HStack {
+                            Text(verbatim: group.name).lineLimit(2)
+                            Spacer(minLength: 4)
+                            Text(verbatim: String(configuration.rules.filter { $0.groupID == group.id }.count))
+                                .foregroundColor(.secondary).monospacedDigit()
+                            Toggle(isOn: $group.enabled) { Text(verbatim: group.name) }
+                                .labelsHidden().toggleStyle(.switch).controlSize(.mini)
+                        }.tag(Filter.group(group.id))
+                    }
+                }
+            }
+            if let id = selectedGroupID, let group = configuration.ruleGroups.first(where: { $0.id == id }) {
+                TextField("Rule group name", text: Binding(get: {
+                    configuration.ruleGroups.first { $0.id == id }?.name ?? group.name
+                }, set: { name in
+                    if let index = configuration.ruleGroups.firstIndex(where: { $0.id == id }) {
+                        configuration.ruleGroups[index].name = name
+                    }
+                })).textFieldStyle(.roundedBorder).padding(.horizontal, 8)
+            }
+            HStack {
+                Button { addGroup() } label: { Image(systemName: "plus") }
+                    .help("Add rule group")
+                Button {
+                    deletingGroup = selectedGroupID
+                    confirmDeleteGroup = true
+                } label: { Image(systemName: "minus") }
+                    .disabled(selectedGroupID == nil).help("Delete rule group")
+                Spacer()
+            }.padding(8)
+        }
+    }
+
+    private var ruleTable: some View {
+        Table(visibleRules, selection: $selectedRule) {
+            TableColumn("Order") { rule in
+                Text(verbatim: String((configuration.rules.firstIndex { $0.id == rule.id } ?? 0) + 1))
+                    .monospacedDigit().foregroundColor(ruleColor(rule))
+            }.width(40)
+            TableColumn("Rule type") { rule in
+                Text(verbatim: rule.type).foregroundColor(ruleColor(rule))
+            }.width(min: 70, ideal: 90)
+            TableColumn("Match") { rule in
+                Text(verbatim: rule.value).foregroundColor(ruleColor(rule)).help(rule.value)
+            }.width(min: 90, ideal: 150)
+            TableColumn("Route to") { rule in
+                Text(verbatim: rule.target).foregroundColor(ruleColor(rule)).help(rule.target)
+            }.width(min: 70, ideal: 100)
+            TableColumn("Rule group") { rule in
+                VStack(alignment: .leading, spacing: 2) {
+                    if let group = configuration.ruleGroups.first(where: { $0.id == rule.groupID }) {
+                        Text(verbatim: group.name)
+                        if !group.enabled { Text("Group disabled").font(.caption) }
+                    } else {
+                        Text("Ungrouped")
+                    }
+                }.foregroundColor(ruleColor(rule))
+            }.width(min: 90, ideal: 130)
+        }
+    }
+
+    private func ruleColor(_ rule: CustomProxyRule) -> Color {
+        configuration.isRuleEnabled(rule) ? .primary : .secondary
+    }
+
+    private func addGroup() {
+        let base = NSLocalizedString("New rule group", comment: "")
+        var name = base
+        var suffix = 2
+        while configuration.ruleGroups.contains(where: { $0.name == name }) {
+            name = "\(base) \(suffix)"
+            suffix += 1
+        }
+        let group = CustomRuleGroup(name: name)
+        configuration.ruleGroups.append(group)
+        filter = .group(group.id)
+        selectedRule = nil
+    }
+
+    private func addRule() {
+        var rule = CustomProxyRule()
+        rule.groupID = selectedGroupID
+        configuration.rules.append(rule)
+        selectedRule = rule.id
+    }
+
+    private func moveRule(_ offset: Int) {
+        guard filter == .all, let index = selectedIndex,
+              configuration.rules.indices.contains(index + offset) else { return }
+        configuration.rules.swapAt(index, index + offset)
+    }
+}
+
 private struct ProxyRuleForm: View {
     @Binding var rule: CustomProxyRule
     let targets: [String]
     let providers: [String]
+    let ruleGroups: [CustomRuleGroup]
     var body: some View {
         Form {
+            Picker("Rule group", selection: $rule.groupID) {
+                Text("Ungrouped").tag(Optional<UUID>.none)
+                ForEach(ruleGroups) { group in
+                    Text(verbatim: group.name).tag(Optional(group.id))
+                }
+            }
+            if let group = ruleGroups.first(where: { $0.id == rule.groupID }), !group.enabled {
+                Text("Group disabled. This rule stays editable but will not be applied.")
+                    .font(.caption).foregroundColor(.secondary)
+            }
             Picker("Rule type", selection: $rule.type) {
                 ForEach(CustomProxyRule.types, id: \.self) { Text(verbatim: $0).tag($0) }
             }

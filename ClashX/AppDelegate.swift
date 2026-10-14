@@ -581,6 +581,10 @@ extension AppDelegate {
     @IBAction func actionCustomProxySettings(_ sender: Any) {
         ClashWindowController<CustomProxySettingsViewController>.create().showWindow(sender)
     }
+
+    @IBAction func actionPersonalNodeSettings(_ sender: Any) {
+        ClashWindowController<PersonalNodeSettingsViewController>.create().showWindow(sender)
+    }
 }
 
 // MARK: Streaming Info

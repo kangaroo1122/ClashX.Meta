@@ -108,6 +108,7 @@ class MenuItemFactory {
         }
 
         if let customMenu = customProxyStatusMenu() { menuItems.append(customMenu) }
+        menuItems.append(ruleGroupMenu())
         let items = Array(menuItems.reversed())
         updateProxyList(withMenus: items)
 
@@ -162,6 +163,7 @@ class MenuItemFactory {
 
     @MainActor
     static func refreshCustomProxyStatusMenu() {
+        refreshRuleGroupMenu()
         guard let statusMenu = AppDelegate.shared.statusMenu else { return }
         let replacement = customProxyStatusMenu()
         if let existing = statusMenu.items.first(where: { $0.identifier?.rawValue == "customProxyStatus" }) {
@@ -171,6 +173,61 @@ class MenuItemFactory {
             statusMenu.insertItem(replacement, at: index)
             AppDelegate.shared.sepatatorLineEndProxySelect.isHidden = false
         }
+    }
+
+    @MainActor
+    private static func ruleGroupMenu() -> NSMenuItem {
+        let editor = CustomProxyEditor.shared
+        let active = CustomProxyHealth.shared.activeConfiguration
+        let config = editor.isBusy ? editor.saved : (active ?? editor.saved)
+        let menu = NSMenuItem(title: NSLocalizedString("Rule groups", comment: ""), action: nil, keyEquivalent: "")
+        menu.identifier = NSUserInterfaceItemIdentifier("customRuleGroups")
+        let submenu = NSMenu()
+        submenu.autoenablesItems = false
+        let canSwitch = active != nil && !editor.isBusy && !editor.loadFailed
+            && CustomProxyHealth.shared.hasApplied(editor.saved)
+        if active == nil {
+            let hint = NSMenuItem(title: NSLocalizedString("Save and apply to a running local core to switch groups.", comment: ""), action: nil, keyEquivalent: "")
+            hint.isEnabled = false
+            submenu.addItem(hint)
+        }
+        for group in config.ruleGroups {
+            let item = NSMenuItem(title: group.name, action: #selector(toggleCustomRuleGroup(_:)), keyEquivalent: "")
+            item.target = MenuItemFactory.self
+            item.representedObject = group.id.uuidString
+            item.state = group.enabled ? .on : .off
+            item.isEnabled = canSwitch
+            submenu.addItem(item)
+        }
+        submenu.addItem(.separator())
+        let manage = NSMenuItem(title: NSLocalizedString("Manage rules…", comment: ""), action: #selector(manageCustomRules(_:)), keyEquivalent: "")
+        manage.target = MenuItemFactory.self
+        submenu.addItem(manage)
+        menu.submenu = submenu
+        return menu
+    }
+
+    @MainActor
+    static func refreshRuleGroupMenu() {
+        guard let statusMenu = AppDelegate.shared.statusMenu else { return }
+        let replacement = ruleGroupMenu()
+        if let existing = statusMenu.items.first(where: { $0.identifier?.rawValue == "customRuleGroups" }) {
+            existing.submenu = replacement.submenu
+        } else if let index = statusMenu.items.firstIndex(of: AppDelegate.shared.sepatatorLineEndProxySelect) {
+            statusMenu.insertItem(replacement, at: index)
+            AppDelegate.shared.sepatatorLineEndProxySelect.isHidden = false
+        }
+    }
+
+    @MainActor @objc private static func toggleCustomRuleGroup(_ sender: NSMenuItem) {
+        guard let value = sender.representedObject as? String, let id = UUID(uuidString: value) else { return }
+        let wasEnabled = sender.state == .on
+        Task { await CustomProxyEditor.shared.toggleRuleGroup(id: id, expectedEnabled: wasEnabled) }
+    }
+
+    @MainActor @objc private static func manageCustomRules(_ sender: NSMenuItem) {
+        CustomProxyEditor.shared.selectedTab = 2
+        ClashWindowController<CustomProxySettingsViewController>.create().showWindow(sender)
     }
 
     @MainActor @objc private static func testCustomProxy(_ sender: NSMenuItem) {

@@ -165,11 +165,16 @@ class ApiRequest {
         let snapshot = ConfigOverride.shared.takePreparedConfig(path: configPath)
         if local {
             CustomProxyHealth.shared.beginConfigurationUpdate()
+            PersonalNodeRuntime.shared.beginUpdate()
         } else {
             CustomProxyHealth.shared.invalidate()
+            PersonalNodeRuntime.shared.record(nil)
         }
         defer {
-            if local { CustomProxyHealth.shared.endConfigurationUpdate() }
+            if local {
+                CustomProxyHealth.shared.endConfigurationUpdate()
+                PersonalNodeRuntime.shared.endUpdate()
+            }
         }
         let generation = ConfigOverride.shared.runtimeGeneration
         let placeHolderErrorDesp = "Error occoured, Please try to fix it by restarting ClashX. "

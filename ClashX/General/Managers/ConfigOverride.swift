@@ -119,6 +119,8 @@ final class ConfigOverride {
     struct AppliedSnapshot {
         let yaml: String
         let custom: CustomProxyConfiguration
+        let personal: PersonalNodeConfiguration
+        let configName: String
     }
 
     @MainActor private var prepared: [String: AppliedSnapshot] = [:]
@@ -134,11 +136,13 @@ final class ConfigOverride {
     func recordAppliedConfig(_ snapshot: AppliedSnapshot?) {
         lastApplied = snapshot
         CustomProxyHealth.shared.setAppliedConfiguration(snapshot?.custom)
+        PersonalNodeRuntime.shared.record(snapshot)
     }
 
     @MainActor
     func forgetAppliedConfig() {
         lastApplied = nil
+        PersonalNodeRuntime.shared.record(nil)
         runtimeGeneration += 1
     }
 
@@ -156,7 +160,7 @@ final class ConfigOverride {
         guard let path = RemoteConfigManager.writeRuntimeConfig(string: result, file: .rollback) else {
             throw CustomProxyError("Unable to prepare the previous configuration for rollback.")
         }
-        prepared[path] = AppliedSnapshot(yaml: result, custom: snapshot.custom)
+        prepared[path] = AppliedSnapshot(yaml: result, custom: snapshot.custom, personal: snapshot.personal, configName: snapshot.configName)
         return path
     }
 
@@ -166,7 +170,7 @@ final class ConfigOverride {
     }
 
     @MainActor
-    func composeConfig(configName: String, stack: TunStack? = nil, tunEnabled: Bool? = nil, tunIPv6: Bool? = nil, custom: CustomProxyConfiguration? = nil) async -> String? {
+    func composeConfig(configName: String, stack: TunStack? = nil, tunEnabled: Bool? = nil, tunIPv6: Bool? = nil, custom: CustomProxyConfiguration? = nil, personal: PersonalNodeConfiguration? = nil) async -> String? {
         compositionError = nil
         guard let configPath = await ApiRequest.findConfigPath(configName: configName),
               let yamlString = readFileString(configPath),
@@ -175,8 +179,12 @@ final class ConfigOverride {
         }
 
         let customConfiguration: CustomProxyConfiguration
+        let personalConfiguration: PersonalNodeConfiguration
         do {
             customConfiguration = try custom ?? CustomProxyStorage.load()
+            personalConfiguration = try personal ?? PersonalNodeStorage.load()
+            // Resolve associations against source subscription groups only.
+            try personalConfiguration.merge(into: &yaml, configName: configName)
             try customConfiguration.merge(into: &yaml)
         } catch {
             compositionError = error.localizedDescription
@@ -191,7 +199,7 @@ final class ConfigOverride {
               let path = RemoteConfigManager.writeRuntimeConfig(string: result, file: .runtime) else {
             return nil
         }
-        prepared[path] = AppliedSnapshot(yaml: result, custom: customConfiguration)
+        prepared[path] = AppliedSnapshot(yaml: result, custom: customConfiguration, personal: personalConfiguration, configName: configName)
         return path
     }
 

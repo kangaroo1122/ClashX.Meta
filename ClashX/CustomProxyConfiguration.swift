@@ -3,12 +3,39 @@ import Network
 import Yams
 
 struct CustomProxyConfiguration: Codable, Equatable {
-    var version = 1
+    var version = 2
     var enabled = false
     var proxies: [CustomProxyEntry] = []
     var groups: [CustomProxyGroup] = []
     var rules: [CustomProxyRule] = []
     var providers: [CustomRuleProvider] = []
+    var ruleGroups: [CustomRuleGroup] = []
+
+    init() {}
+
+    private enum CodingKeys: String, CodingKey {
+        case version, enabled, proxies, groups, rules, providers, ruleGroups
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let sourceVersion = try values.decode(Int.self, forKey: .version)
+        guard [1, 2].contains(sourceVersion) else { throw CustomProxyError("Unsupported custom configuration version.") }
+        enabled = try values.decode(Bool.self, forKey: .enabled)
+        proxies = try values.decode([CustomProxyEntry].self, forKey: .proxies)
+        groups = try values.decode([CustomProxyGroup].self, forKey: .groups)
+        rules = try values.decode([CustomProxyRule].self, forKey: .rules)
+        providers = try values.decode([CustomRuleProvider].self, forKey: .providers)
+        ruleGroups = try values.decodeIfPresent([CustomRuleGroup].self, forKey: .ruleGroups) ?? []
+        // Always write v2: older apps must reject grouped rules rather than
+        // silently activating rules belonging to disabled groups.
+        version = 2
+    }
+
+    func isRuleEnabled(_ rule: CustomProxyRule) -> Bool {
+        guard let id = rule.groupID else { return true }
+        return ruleGroups.first(where: { $0.id == id })?.enabled ?? false
+    }
 
     var targets: [String] { ["DIRECT", "REJECT"] + proxies.map(\.name) + groups.map(\.name) }
 
@@ -21,12 +48,18 @@ struct CustomProxyConfiguration: Codable, Equatable {
                 && !name.contains(",") && !name.contains(where: { $0.isNewline })
         }
         let names = proxies.map(\.name) + groups.map(\.name)
-        try require(version == 1, "Unsupported custom configuration version.")
+        try require(version == 2, "Unsupported custom configuration version.")
         // Imported identifiers also drive list selection, health results and
         // provider cache paths, so duplicates must not reach the editor.
-        for ids in [proxies.map(\.id), groups.map(\.id), rules.map(\.id), providers.map(\.id)] {
+        for ids in [proxies.map(\.id), groups.map(\.id), rules.map(\.id), providers.map(\.id), ruleGroups.map(\.id)] {
             try require(Set(ids).count == ids.count, "Custom configuration contains duplicate entry identifiers.")
         }
+        let ruleGroupNames = ruleGroups.map(\.name)
+        try require(ruleGroupNames.allSatisfy(validName) && Set(ruleGroupNames).count == ruleGroupNames.count,
+                    "Rule group names must be valid and unique.")
+        let ruleGroupIDs = Set(ruleGroups.map(\.id))
+        try require(rules.allSatisfy { $0.groupID.map { ruleGroupIDs.contains($0) } ?? true },
+                    "A rule references a missing rule group.")
         try require(names.allSatisfy(validName), "Proxy and group names must be nonempty and cannot contain commas or line breaks.")
         try require(Set(names).count == names.count, "Proxy and group names must be unique.")
         try require(Set(names).isDisjoint(with: ["DIRECT", "REJECT", "GLOBAL", "REJECT-DROP", "PASS", "COMPATIBLE"]), "A proxy or group uses a reserved name.")
@@ -103,7 +136,7 @@ struct CustomProxyConfiguration: Codable, Equatable {
             throw CustomProxyError("The subscription must contain a YAML mapping.")
         }
         func array<T>(_ key: String, as type: T.Type) throws -> [T] {
-            guard let value = base[key] else { return [] }
+            guard let value = base[key], !(value is NSNull) else { return [] }
             guard let values = value as? [T] else { throw CustomProxyError("Invalid subscription list: \(key)") }
             return values
         }
@@ -162,7 +195,7 @@ struct CustomProxyConfiguration: Codable, Equatable {
             existingGroups.append(value)
         }
         var existingProviders = base["rule-providers"] as? [String: Any] ?? [:]
-        if base["rule-providers"] != nil && !(base["rule-providers"] is [String: Any]) {
+        if let value = base["rule-providers"], !(value is NSNull), !(value is [String: Any]) {
             throw CustomProxyError("Invalid subscription rule providers.")
         }
         for provider in providers {
@@ -173,7 +206,7 @@ struct CustomProxyConfiguration: Codable, Equatable {
                 "path": "./ruleset/custom-\(provider.id.uuidString).\(provider.format)"
             ] as [String: Any]
         }
-        let addedRules = rules.map { rule in
+        let addedRules = rules.filter { isRuleEnabled($0) }.map { rule in
             let value = rule.type == "RULE-SET" ? local(rule.value) : rule.value
             return "\(rule.type),\(value),\(target(rule.target))" + (rule.supportsNoResolve && rule.noResolve ? ",no-resolve" : "")
         }
@@ -218,11 +251,18 @@ struct CustomProxyGroup: Codable, Equatable, Identifiable {
 struct CustomProxyRule: Codable, Equatable, Identifiable {
     static let types = ["DOMAIN", "DOMAIN-SUFFIX", "DOMAIN-KEYWORD", "IP-CIDR", "IP-CIDR6", "PROCESS-NAME", "RULE-SET"]
     var id = UUID()
+    var groupID: UUID?
     var type = "DOMAIN-SUFFIX"
     var value = ""
     var target = "DIRECT"
     var noResolve = true
     var supportsNoResolve: Bool { ["IP-CIDR", "IP-CIDR6", "RULE-SET"].contains(type) }
+}
+
+struct CustomRuleGroup: Codable, Equatable, Identifiable {
+    var id = UUID()
+    var name = ""
+    var enabled = true
 }
 
 struct CustomRuleProvider: Codable, Equatable, Identifiable {
@@ -248,7 +288,7 @@ enum CustomProxyStorage {
     static func load() throws -> CustomProxyConfiguration {
         guard FileManager.default.fileExists(atPath: url.path) else { return CustomProxyConfiguration() }
         let value = try JSONDecoder().decode(CustomProxyConfiguration.self, from: Data(contentsOf: url))
-        guard value.version == 1 else { throw CustomProxyError("Unsupported custom configuration version.") }
+        guard value.version == 2 else { throw CustomProxyError("Unsupported custom configuration version.") }
         if value.enabled { try value.validate() }
         return value
     }
@@ -281,7 +321,7 @@ enum CustomProxyStorage {
         let value: CustomProxyConfiguration
         do {
             let header = try decoder.decode(Header.self, from: data)
-            guard header.version == 1 else { throw CustomProxyError("Unsupported custom configuration version.") }
+            guard header.version == 2 else { throw CustomProxyError("Unsupported custom configuration version.") }
             value = try decoder.decode(CustomProxyConfiguration.self, from: data)
         } catch is DecodingError {
             throw CustomProxyError("Choose a valid ClashX custom proxy configuration JSON file.")
@@ -304,7 +344,7 @@ enum CustomProxyStorage {
         try writePrivateFile(encoder.encode(value), to: destination)
     }
 
-    private static func writePrivateFile(_ data: Data, to destination: URL) throws {
+    static func writePrivateFile(_ data: Data, to destination: URL) throws {
         let fm = FileManager.default
         try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
         // Stage with owner-only permissions before atomically replacing a file

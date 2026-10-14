@@ -818,6 +818,12 @@
                                 <action selector="actionDashboard:" target="Voe-Tx-rLC" id="i6y-pW-cD3"/>
                             </connections>
                         </menuItem>
+                        <menuItem title="Personal nodes" id="Psn-mn-001">
+                            <modifierMask key="keyEquivalentModifierMask"/>
+                            <connections>
+                                <action selector="actionPersonalNodeSettings:" target="Voe-Tx-rLC" id="Psn-ac-001"/>
+                            </connections>
+                        </menuItem>
                         <menuItem title="Custom proxies and rules" id="Cpr-mn-001">
                             <modifierMask key="keyEquivalentModifierMask"/>
                             <connections>

@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C58000000000000000000008 /* PersonalNodeSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C58000000000000000000007 /* PersonalNodeSettingsViewController.swift */; };
+		C58000000000000000000006 /* PersonalNodeEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C58000000000000000000005 /* PersonalNodeEditor.swift */; };
+		C58000000000000000000004 /* PersonalNodeLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = C58000000000000000000003 /* PersonalNodeLink.swift */; };
+		C58000000000000000000002 /* PersonalNodeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C58000000000000000000001 /* PersonalNodeConfiguration.swift */; };
 		C57000000000000000000004 /* CustomProxySettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C57000000000000000000003 /* CustomProxySettingsViewController.swift */; };
 		C57000000000000000000002 /* CustomProxyConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C57000000000000000000001 /* CustomProxyConfiguration.swift */; };
 		0106179F2AF38EFA005C7877 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49FEC6682AD9369C00BAD9F5 /* Command.swift */; };
@@ -242,6 +246,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C58000000000000000000007 /* PersonalNodeSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalNodeSettingsViewController.swift; sourceTree = "<group>"; };
+		C58000000000000000000005 /* PersonalNodeEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalNodeEditor.swift; sourceTree = "<group>"; };
+		C58000000000000000000003 /* PersonalNodeLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalNodeLink.swift; sourceTree = "<group>"; };
+		C58000000000000000000001 /* PersonalNodeConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalNodeConfiguration.swift; sourceTree = "<group>"; };
 		C57000000000000000000003 /* CustomProxySettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProxySettingsViewController.swift; sourceTree = "<group>"; };
 		C57000000000000000000001 /* CustomProxyConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProxyConfiguration.swift; sourceTree = "<group>"; };
 		010C40CC303DEB7A00FCB252 /* DashboardChromeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardChromeState.swift; sourceTree = "<group>"; };
@@ -873,6 +881,10 @@
 				49CF3B3520CD75DF001EBF94 /* ClashX-Bridging-Header.h */,
 				F9FAB31D262BE04800DE02A6 /* Images.xcassets */,
 				49CCDA292A54F9AC00FF1E13 /* ClashWindowController.swift */,
+				C58000000000000000000001 /* PersonalNodeConfiguration.swift */,
+				C58000000000000000000003 /* PersonalNodeLink.swift */,
+				C58000000000000000000005 /* PersonalNodeEditor.swift */,
+				C58000000000000000000007 /* PersonalNodeSettingsViewController.swift */,
 				C57000000000000000000003 /* CustomProxySettingsViewController.swift */,
 				C57000000000000000000001 /* CustomProxyConfiguration.swift */,
 			);
@@ -1100,6 +1112,10 @@
 				01F335DE2AD10D0B0048AF77 /* DebugSettingViewController.swift in Sources */,
 				011C61383039B15B00374954 /* AppNameResolver.swift in Sources */,
 				01F335DF2AD10D0B0048AF77 /* ClashWindowController.swift in Sources */,
+				C58000000000000000000002 /* PersonalNodeConfiguration.swift in Sources */,
+				C58000000000000000000004 /* PersonalNodeLink.swift in Sources */,
+				C58000000000000000000006 /* PersonalNodeEditor.swift in Sources */,
+				C58000000000000000000008 /* PersonalNodeSettingsViewController.swift in Sources */,
 				C57000000000000000000004 /* CustomProxySettingsViewController.swift in Sources */,
 				C57000000000000000000002 /* CustomProxyConfiguration.swift in Sources */,
 				01F335E02AD10D0B0048AF77 /* Settings.swift in Sources */,
