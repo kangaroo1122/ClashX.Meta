@@ -1,62 +1,43 @@
 import Foundation
 
 actor LogRateLimiter {
-    private let maxLogsCount: Int = 20000
-    private let timeDuration: TimeInterval = 5.0
-    private var logCount: Int = 0
-    private var startTime: TimeInterval = CFAbsoluteTimeGetCurrent()
-    private var lastTimeCheck: TimeInterval = CFAbsoluteTimeGetCurrent()
-    private var isBlocked = false
-    
-    private let onRateLimitTriggered: () -> Void
-    
-    init(onRateLimitTriggered: @escaping () -> Void) {
+    private let maxLogsCount = 20000
+    private let timeDuration: TimeInterval = 5
+    private var logCount = 0
+    private var windowStart = ProcessInfo.processInfo.systemUptime
+    private var blockedUntil: TimeInterval = 0
+    private let onRateLimitTriggered: @MainActor @Sendable () -> Void
+
+    init(onRateLimitTriggered: @escaping @MainActor @Sendable () -> Void) {
         self.onRateLimitTriggered = onRateLimitTriggered
     }
-    
-    // Returns true if log can be processed, false if rate limited
+
+    func reset() {
+        logCount = 0
+        windowStart = ProcessInfo.processInfo.systemUptime
+        blockedUntil = 0
+    }
+
     func processLog() -> Bool {
-        guard !isBlocked else { return false }
-        
-        let now = CFAbsoluteTimeGetCurrent()
-        
-        // Only check time and count every 1 second to reduce overhead
-        if now - lastTimeCheck >= 1.0 {
-            lastTimeCheck = now
-            
-            // Reset counter if time window has passed
-            if now - startTime >= timeDuration {
-                startTime = now
-                logCount = 0
-            }
-            
-            // Check if rate limit exceeded
-            if logCount >= maxLogsCount {
-                Task { await triggerRateLimit() }
-                return false
-            }
+        let now = ProcessInfo.processInfo.systemUptime
+        guard now >= blockedUntil else { return false }
+        if blockedUntil > 0 {
+            reset()
+            Logger.log("Log reception resumed after rate limiting")
         }
-        
+        if now - windowStart >= timeDuration {
+            windowStart = now
+            logCount = 0
+        }
+        guard logCount < maxLogsCount else {
+            // Set the deadline before scheduling UI work; no modal dialog or timer task.
+            blockedUntil = now + 60
+            Logger.log("Log rate limit reached: 20000 messages in 5 seconds; pausing reception for 60 seconds", level: .warning)
+            let callback = onRateLimitTriggered
+            Task { @MainActor in callback() }
+            return false
+        }
         logCount += 1
         return true
-    }
-    
-    private func triggerRateLimit() async {
-        isBlocked = true
-        
-        // Execute callback on main actor
-        await MainActor.run {
-            onRateLimitTriggered()
-            Logger.log("⚠️ Rate limit triggered: >\(maxLogsCount) logs/\(timeDuration)sec, paused for 1min")
-        }
-        
-        // Resume after 60 seconds
-        try? await Task.sleep(seconds: 60)
-        
-        isBlocked = false
-        
-        await MainActor.run {
-            Logger.log("✅ Rate limit resumed")
-        }
     }
 }

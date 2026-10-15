@@ -83,18 +83,34 @@ final class ApiRequestStream {
 	@MainActor
 	private var isTerminating = false
 
-	private let logRateLimiter = LogRateLimiter {
-		let alert = NSAlert()
-		alert.messageText = NSLocalizedString("Log system crashed.", comment: "")
-		alert.addButton(withTitle: NSLocalizedString("Quit", comment: ""))
-		alert.addButton(withTitle: NSLocalizedString("OK", comment: ""))
-		let response = alert.runModal()
-		if response == .alertFirstButtonReturn {
-			Task {
-				await ExitManager.shared.requestQuit(force: true)
-			}
-		}
-	}
+    @MainActor private var loggingSuspended = false
+    @MainActor private var wakeRecoveryUntil: TimeInterval = 0
+    @MainActor private var wakeInterfaceErrors = 0
+    @MainActor private var wakeTunRecoveryTask: Task<Void, Never>?
+    private let logRateLimiter = LogRateLimiter {
+        UserNotificationCenter.shared.postLogRateLimitNotice()
+    }
+
+    @MainActor
+    func suspendLoggingForSleep() {
+        loggingSuspended = true
+        wakeTunRecoveryTask?.cancel()
+        wakeRecoveryUntil = 0
+        wakeInterfaceErrors = 0
+        streamGenerations[.logging] = UUID()
+        streamTasks.removeValue(forKey: .logging)?.cancel()
+        cancelRetryTask(for: .logging)
+    }
+
+    @MainActor
+    func resumeLoggingAfterWake() async {
+        await logRateLimiter.reset()
+        guard !Task.isCancelled, !isTerminating else { return }
+        loggingSuspended = false
+        wakeInterfaceErrors = 0
+        wakeRecoveryUntil = ProcessInfo.processInfo.systemUptime + 30
+        resetStreamApi(for: .logging)
+    }
 
 	@MainActor
 	func resetStreamApis() {
@@ -124,6 +140,7 @@ final class ApiRequestStream {
 
 	@MainActor
 	private func startStream(for type: StreamType) {
+        guard !isTerminating, type != .logging || !loggingSuspended else { return }
 		cancelRetryTask(for: type)
 		streamTasks[type]?.cancel()
 
@@ -142,7 +159,8 @@ final class ApiRequestStream {
 						didConnect = true
 						await self?.streamDidConnect(type)
 					}
-					await self?.streamDidReceiveMessage(type, text: line)
+                    guard !Task.isCancelled, self?.streamGenerations[type] == generation else { return }
+                    await self?.streamDidReceiveMessage(type, text: line)
 				}
 				await self?.streamDidDisconnect(type, error: nil, generation: generation)
 			} catch {
@@ -172,7 +190,8 @@ final class ApiRequestStream {
 
 	@MainActor
 	func prepareForTermination() {
-		isTerminating = true
+        isTerminating = true
+        wakeTunRecoveryTask?.cancel()
 		streamTasks.values.forEach { $0.cancel() }
 		streamRetryTasks.values.forEach { $0.cancel() }
 		streamTasks.removeAll()
@@ -378,9 +397,20 @@ final class ApiRequestStream {
 		case .traffic:
 			guard let message = try? Self.decoder.decode(TrafficMessage.self, from: Data(text.utf8)) else { return }
 			await notifyTrafficUpdate(up: message.up, down: message.down)
-		case .logging:
-			guard await logRateLimiter.processLog() else { return }
-			guard let message = try? Self.decoder.decode(LogMessage.self, from: Data(text.utf8)) else { return }
+        case .logging:
+            guard !loggingSuspended else { return }
+            guard await logRateLimiter.processLog(), !Task.isCancelled, !loggingSuspended else { return }
+            guard let message = try? Self.decoder.decode(LogMessage.self, from: Data(text.utf8)) else { return }
+            if RemoteControlManager.selectConfig == nil,
+               ProcessInfo.processInfo.systemUptime < wakeRecoveryUntil,
+               message.payload.contains("[TUN] Auto detect interface"),
+               message.payload.contains("get empty name") || message.payload.contains("failed") {
+                wakeInterfaceErrors += 1
+                if wakeInterfaceErrors >= 10 {
+                    wakeRecoveryUntil = 0 // At most one recovery attempt per wake.
+                    wakeTunRecoveryTask = Task { @MainActor in await ProxyManager.shared.recoverTunAfterWake() }
+                }
+            }
 			await notifyLog(log: message.payload, level: message.type ?? "info")
 		case .memory:
 			guard let message = try? Self.decoder.decode(MemoryMessage.self, from: Data(text.utf8)) else { return }

@@ -1,6 +1,52 @@
 {
   "sourceLanguage": "en",
   "strings": {
+  "Too many core logs. Reception will resume automatically after 60 seconds.": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Too many core logs. Reception will resume automatically after 60 seconds."
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "内核日志过于频繁，60 秒后自动恢复接收。"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "核心日誌過於頻繁，60 秒後自動恢復接收。"
+        }
+      }
+    }
+  },
+  "Log reception paused": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Log reception paused"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "日志接收已暂停"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "日誌接收已暫停"
+        }
+      }
+    }
+  },
   "This personal node is still referenced. Update or remove its dialer-proxy references before deleting it.": {
     "extractionState": "manual",
     "localizations": {

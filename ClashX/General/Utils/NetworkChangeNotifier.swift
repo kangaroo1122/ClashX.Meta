@@ -199,6 +199,36 @@ class NetworkChangeNotifier {
         return false
     }
 
+    /// Local interface and default router readiness; never probes a public website.
+    static func readyNetworkSignature() -> String? {
+        guard let store = SCDynamicStoreCreate(nil, "ClashX.wake" as CFString, nil, nil) else { return nil }
+        var interfaces: [(String, String)] = []
+        for entity in [kSCEntNetIPv4, kSCEntNetIPv6] {
+            let key = SCDynamicStoreKeyCreateNetworkGlobalEntity(nil, kSCDynamicStoreDomainState, entity)
+            guard let values = SCDynamicStoreCopyValue(store, key) as? [String: Any],
+                  let name = values[kSCDynamicStorePropNetPrimaryInterface as String] as? String,
+                  let router = values["Router"] as? String, !router.isEmpty,
+                  !name.hasPrefix("utun"), name != "lo0" else { continue }
+            interfaces.append((name, router))
+        }
+        var addresses: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&addresses) == 0 else { return nil }
+        defer { freeifaddrs(addresses) }
+        var cursor = addresses
+        while let entry = cursor {
+            defer { cursor = entry.pointee.ifa_next }
+            let flags = entry.pointee.ifa_flags
+            guard flags & UInt32(IFF_UP) != 0, flags & UInt32(IFF_RUNNING) != 0,
+                  let address = entry.pointee.ifa_addr,
+                  address.pointee.sa_family == UInt8(AF_INET) || address.pointee.sa_family == UInt8(AF_INET6) else { continue }
+            let name = String(cString: entry.pointee.ifa_name)
+            if let match = interfaces.first(where: { $0.0 == name }) {
+                return "\(match.0)|\(match.1)"
+            }
+        }
+        return nil
+    }
+
     static func getPrimaryInterface() -> String? {
         let store = SCDynamicStoreCreate(nil, "ClashX" as CFString, nil, nil)
         if store == nil {

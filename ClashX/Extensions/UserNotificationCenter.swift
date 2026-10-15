@@ -87,6 +87,20 @@ class UserNotificationCenter: NSObject {
 		}
 	}
 	
+    func postLogRateLimitNotice() {
+        guard !Settings.disableNoti else { return }
+        Task {
+            let center = UNUserNotificationCenter.current()
+            let settings = await center.notificationSettings()
+            guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else { return }
+            let content = UNMutableNotificationContent()
+            content.title = NSLocalizedString("Log reception paused", comment: "")
+            content.body = NSLocalizedString("Too many core logs. Reception will resume automatically after 60 seconds.", comment: "")
+            // Never fall back to a modal alert, including when delivery fails.
+            try? await center.add(UNNotificationRequest(identifier: "log-rate-limit", content: content, trigger: nil))
+        }
+    }
+
 	func postConfigFileChangeDetectionNotice() {
 		post(title: NSLocalizedString("Config file have been changed", comment: ""),
 			 info: NSLocalizedString("Tap to reload config", comment: ""),

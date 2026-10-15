@@ -236,6 +236,37 @@ final class ProxyManager: NSObject {
         await reconcileTun()
     }
 
+    /// Recreate TUN only after repeated post-wake interface errors, without changing user intent.
+    func recoverTunAfterWake() async {
+        await ConfigApplyCoordinator.shared.perform {
+            guard !Task.isCancelled, ExitManager.shared.quitState == .idle,
+                  !AppDelegate.shared.isSleeping,
+                  RemoteControlManager.selectConfig == nil,
+                  ConfigManager.shared.kernelState.isOperational,
+                  NetworkChangeNotifier.readyNetworkSignature() != nil,
+                  !self.suspendState.isSuspended,
+                  !self.userIntent.tunOverridden || self.userIntent.tunEnabled,
+                  let config = await ApiRequest.requestConfig(), config.tun.enable else { return }
+            guard !AppDelegate.shared.isSleeping, RemoteControlManager.selectConfig == nil,
+                  ExitManager.shared.quitState == .idle else { return }
+            Logger.log("Recreating TUN after repeated post-wake interface errors", level: .warning)
+            _ = await self.disableTun()
+            // Once disabled, finish the pair even if sleep begins again. User changes
+            // are serialized behind this operation; quitting must never re-enable TUN.
+            guard RemoteControlManager.selectConfig == nil,
+                  ExitManager.shared.quitState == .idle,
+                  !self.suspendState.isSuspended else { return }
+            _ = await self.enableTun()
+            if let restored = await ApiRequest.requestConfig() {
+                ConfigManager.shared.currentConfig = restored
+                await self.syncTunState(from: restored)
+                if !restored.tun.enable {
+                    Logger.log("Post-wake TUN recovery did not restore TUN", level: .warning)
+                }
+            }
+        }
+    }
+
     // MARK: - SSID Suspend
 
     func setSuspended(_ suspended: Bool) async {

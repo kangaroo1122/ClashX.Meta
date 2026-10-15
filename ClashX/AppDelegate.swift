@@ -54,6 +54,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var disposeBag = DisposeBag()
     var statusItemView: StatusItemViewProtocol!
 
+    @MainActor private var wakeRecoveryTask: Task<Void, Never>?
+    @MainActor private(set) var isSleeping = false
+
     let clashProcess = ClashProcess()
     let clashStatusTool = ClashStatusTool()
 
@@ -168,6 +171,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
+        wakeRecoveryTask?.cancel()
         NetworkChangeNotifier.stop()
             Task {
             await ExitManager.shared.handleWillTerminate()
@@ -374,6 +378,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: NSWorkspace.didWakeNotification, object: nil
         )
 
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self, selector: #selector(prepareProxyForSleep),
+            name: NSWorkspace.willSleepNotification, object: nil
+        )
+
         ProxyHealthCheckManager.shared.setupHealthCheckOnIPAddressChange(disposeBag: disposeBag)
 
         ProxyManager.shared
@@ -417,11 +426,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc func resetProxySettingOnWakeupFromSleep() {
-        Task {
-            await ProxyManager.shared.reconcileState()
+    @MainActor @objc func prepareProxyForSleep() {
+        isSleeping = true
+        wakeRecoveryTask?.cancel()
+        ApiRequestStream.shared.suspendLoggingForSleep()
+    }
+
+    @MainActor @objc func resetProxySettingOnWakeupFromSleep() {
+        isSleeping = false
+        wakeRecoveryTask?.cancel()
+        ApiRequestStream.shared.suspendLoggingForSleep()
+        wakeRecoveryTask = Task { @MainActor in
+            var previous: String?
+            var stableSamples = 0
+            while !Task.isCancelled, ExitManager.shared.quitState == .idle {
+                let current = NetworkChangeNotifier.readyNetworkSignature()
+                stableSamples = current != nil && current == previous ? stableSamples + 1 : 0
+                previous = current
+                if stableSamples >= 3 {
+                    if RemoteControlManager.selectConfig == nil,
+                       ConfigManager.shared.kernelState.isOperational {
+                        await ProxyManager.shared.reconcileState()
+                    }
+                    guard !Task.isCancelled, !isSleeping else { return }
+                    await ApiRequestStream.shared.resumeLoggingAfterWake()
+                    Logger.log("Network stable after wake; log reception resumed")
+                    return
+                }
+                do { try await Task.sleep(seconds: 1) } catch { return }
+            }
         }
     }
+
 }
 
 // MARK: Meta Core
