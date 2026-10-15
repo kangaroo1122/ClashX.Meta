@@ -38,7 +38,9 @@ class Logger {
     private(set) var sessionId = ""
     
     private let coreLog = DDLog()
-    private var cleanupLogTask: Task<Void, Never>?
+    private let logCleanupQueue = DispatchQueue(label: "com.clashx.log-cleanup", qos: .utility)
+    private var logWriteSources: [DispatchSourceFileSystemObject] = []
+    private var logCleanupTimer: DispatchSourceTimer?
 
     var coreLogPath: String {
         "\(logFolder())/\(kCoreLogName)"
@@ -76,8 +78,6 @@ class Logger {
         coreLog.removeAllLoggers()
         coreLog.add(newCoreLogger)
         coreFileLogger = newCoreLogger
-        
-        startCleanup()
     }
 
     private func logToLog(_ ddlog: DDLog, msg: String, level: ClashLogLevel) {
@@ -124,7 +124,7 @@ class Logger {
 
         FileManager.default.createFile(atPath: coreLogPath, contents: nil)
         FileManager.default.createFile(atPath: coreCrashLogPath, contents: nil)
-
+        startCleanup()
         cleanupLogDirectories()
     }
     
@@ -146,12 +146,38 @@ class Logger {
     }
     
     
-    func startCleanup() {
-        cleanupLogTask = Task {
-            while !Task.isCancelled {
-                try? await Task.sleep(seconds: 5 * 60)
-                try? Self.trimLog(atPath: coreLogPath, maxSize: 1024 * 1024)
+    private func startCleanup() {
+        let paths = [coreLogPath, coreCrashLogPath]
+        logCleanupQueue.sync {
+            logWriteSources.forEach { $0.cancel() }
+            logWriteSources.removeAll()
+            logCleanupTimer?.cancel()
+
+            for path in paths {
+                let descriptor = open(path, O_EVTONLY | O_CLOEXEC)
+                guard descriptor >= 0 else {
+                    Logger.log("Cannot watch core log writes; periodic cleanup remains enabled", level: .warning)
+                    continue
+                }
+                let source = DispatchSource.makeFileSystemObjectSource(
+                    fileDescriptor: descriptor, eventMask: [.write, .extend], queue: logCleanupQueue)
+                source.setEventHandler {
+                    try? Self.trimLog(atPath: path, maxSize: 1024 * 1024)
+                }
+                source.setCancelHandler { close(descriptor) }
+                logWriteSources.append(source)
+                source.resume()
             }
+
+            // Fallback for missed/coalesced events. Both paths share the serial queue
+            // so a timer and a write event never trim the same file concurrently.
+            let timer = DispatchSource.makeTimerSource(queue: logCleanupQueue)
+            timer.schedule(deadline: .now(), repeating: .seconds(5), leeway: .seconds(1))
+            timer.setEventHandler {
+                for path in paths { try? Self.trimLog(atPath: path, maxSize: 1024 * 1024) }
+            }
+            logCleanupTimer = timer
+            timer.resume()
         }
     }
 
@@ -162,9 +188,13 @@ class Logger {
 
         let handle = try FileHandle(forUpdating: url)
         defer { try? handle.close() }
-
-        try handle.seek(toOffset: size - UInt64(maxSize))
-        var tail = try handle.read(upToCount: maxSize) ?? Data()
+        let currentSize = try handle.seekToEnd()
+        guard currentSize > UInt64(maxSize) else { return }
+        // Leave headroom rather than copying the whole tail on every subsequent write.
+        // Keep the inode: launchd still holds the append descriptor for this file.
+        let retainedSize = maxSize / 2
+        try handle.seek(toOffset: currentSize - UInt64(retainedSize))
+        var tail = try handle.read(upToCount: retainedSize) ?? Data()
 
         if let firstNewline = tail.firstIndex(of: 0x0A) {
             tail.removeSubrange(0...firstNewline)
