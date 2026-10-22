@@ -98,7 +98,7 @@ class MenuItemFactory {
             }
         }
 
-        if hideState == .mixed {
+        if hideState == .mixed, !collapsedItems.isEmpty {
             let collapsedItem = NSMenuItem(title: "Collapsed", action: nil, keyEquivalent: "")
             collapsedItem.isEnabled = true
             collapsedItem.submenu = .init(title: "")

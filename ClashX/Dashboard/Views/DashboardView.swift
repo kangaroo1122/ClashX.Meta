@@ -20,13 +20,14 @@ struct DashboardView: View {
 	@StateObject private var networkStatusPoller = NetworkStatusPoller()
 	@StateObject private var topAppsPoller = TopAppsPoller()
 	@StateObject private var connectionsStatsPoller = ConnectionsStatsPoller()
+	@State private var detailReloadID = UUID()
 
 	var body: some View {
 		NavigationSplitView(columnVisibility: $chromeState.columnVisibility) {
 			SidebarView(selection: $chromeState.selection, clashApiDatasStorage: apiDatasStorage)
 				.navigationSplitViewColumnWidth(min: 160, ideal: 200, max: 240)
 		} detail: {
-			detailView
+			detailView.id(detailReloadID)
 		}
 		.environmentObject(apiDatasStorage.overviewData)
 		.environmentObject(apiDatasStorage.logStorage)
@@ -71,6 +72,9 @@ struct DashboardView: View {
 		}
 		.onChange(of: toolbarState.hideProxyNames) { newValue in
 			hideProxyNames.hide = newValue
+		}
+		.onReceive(NotificationCenter.default.publisher(for: .reloadDashboard)) { _ in
+			detailReloadID = UUID()
 		}
 	}
 

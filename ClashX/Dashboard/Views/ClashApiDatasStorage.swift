@@ -206,6 +206,7 @@ class ClashConnsStorage: ObservableObject {
 	@Published var conns = [DBConnection]()
 	/// Closed connections, newest first, capped at `maxClosedConnections`.
 	@Published private(set) var closedConns = [DBConnection]()
+	@Published private(set) var snapshotRevision: UInt64 = 0
 	/// While paused all processing is skipped (aligned with upstream yacd); the next resume diffs across the whole gap.
 	@Published var isPaused = false
 
@@ -231,12 +232,14 @@ class ClashConnsStorage: ObservableObject {
 		}
 
 		conns = snapshot.connections
+		snapshotRevision &+= 1
 	}
 
 	func reset() {
 		conns.removeAll()
 		closedConns.removeAll()
 		trackedConns.removeAll()
+		snapshotRevision &+= 1
 	}
 }
 

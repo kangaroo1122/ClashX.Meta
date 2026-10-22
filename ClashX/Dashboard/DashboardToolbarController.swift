@@ -71,7 +71,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 	func attach(to window: NSWindow) {
 		attachedWindow = window
 		window.toolbar = toolbar
-		syncItems()
+		updateToolbar()
 		if cachedControl(.dashSourceIP) != nil {
 			repopulateGroupedFilterMenu()
 		}
@@ -117,11 +117,35 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 		}
 	}
 
-	private func syncItems() {
+	private func updateToolbar(rebuild: Bool = false) {
 		let desired = desiredIdentifiers()
+		let needsRebuild = rebuild || toolbar.items.map(\.itemIdentifier) != desired
 
-		if toolbar.items.map(\.itemIdentifier) != desired {
-			mutateItemsOffline(desired)
+		if needsRebuild {
+			let oldToolbar = toolbar
+			attachedWindow?.toolbar = nil
+			oldToolbar?.delegate = nil
+			itemCache.removeAll()
+			trampolines.removeAll()
+			lastSourceIPs = []
+			lastAppNames = []
+			lastHasInternal = false
+			lastSegmentCounts = (active: -1, closed: -1)
+
+			let newToolbar = NSToolbar(identifier: "DashboardToolbar")
+			newToolbar.delegate = self
+			newToolbar.displayMode = .iconOnly
+			toolbar = newToolbar
+			attachedWindow?.toolbar = newToolbar
+
+			if toolbar.items.map(\.itemIdentifier) != desired {
+				mutateItemsOffline(desired)
+			}
+			if cachedControl(.dashSourceIP) != nil {
+				repopulateGroupedFilterMenu()
+			}
+			updatePopupSelection()
+			Task { await updateFilteredSegmentLabels() }
 		}
 
 		let targetTitleVisibility: NSWindow.TitleVisibility = chromeState.showsSegmentedToolbar ? .hidden : .visible
@@ -154,11 +178,19 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 	// MARK: - Model -> Control subscriptions
 
 	private func subscribe() {
+		NotificationCenter.default.publisher(for: .reloadDashboard)
+			.receive(on: DispatchQueue.main)
+			.sink { [weak self] _ in
+				guard let self else { return }
+				self.updateToolbar(rebuild: true)
+			}
+			.store(in: &cancellables)
+
 		chromeState.$selection
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] _ in
 				guard let self else { return }
-				self.syncItems()
+				self.updateToolbar()
 				if self.chromeState.selection == .conns, self.cachedControl(.dashSourceIP) != nil {
 					self.repopulateGroupedFilterMenu()
 					self.updatePopupSelection()
@@ -174,7 +206,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 				if let seg = self.cachedControl(.dashSegmentedProxies) as? NSSegmentedControl {
 					seg.selectedSegment = segment == .proxyList ? 0 : 1
 				}
-				self.syncItems()
+				self.updateToolbar()
 			}
 			.store(in: &cancellables)
 
@@ -185,7 +217,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 				if let seg = self.cachedControl(.dashSegmentedRules) as? NSSegmentedControl {
 					seg.selectedSegment = segment == .ruleList ? 0 : 1
 				}
-				self.syncItems()
+				self.updateToolbar()
 			}
 			.store(in: &cancellables)
 
@@ -294,7 +326,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 				}
 				if self.chromeState.selection == .conns,
 				   self.hasConnsData != self.toolbar.items.contains(where: { $0.itemIdentifier == .dashSourceIP }) {
-					self.syncItems()
+					self.updateToolbar()
 				}
 			}
 			.store(in: &cancellables)
