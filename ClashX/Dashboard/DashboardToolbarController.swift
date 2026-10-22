@@ -20,6 +20,7 @@ extension NSToolbarItem.Identifier {
 	static let dashHideNames = NSToolbarItem.Identifier("DashHideNames")
 	static let dashSearch = NSToolbarItem.Identifier("DashSearch")
 	static let dashPauseRefresh = NSToolbarItem.Identifier("DashPauseRefresh")
+	static let dashCloseFilteredConns = NSToolbarItem.Identifier("DashCloseFilteredConns")
 	static let dashStopAll = NSToolbarItem.Identifier("DashStopAll")
 	static let dashSourceIP = NSToolbarItem.Identifier("DashSourceIP")
 	static let dashLogFilter = NSToolbarItem.Identifier("DashLogFilter")
@@ -28,6 +29,11 @@ extension NSToolbarItem.Identifier {
 
 @MainActor
 final class DashboardToolbarController: NSObject, NSMenuDelegate {
+	private enum ToolbarUpdateStrategy {
+		case full
+		case diff
+	}
+
 	private let chromeState: DashboardChromeState
 	private let toolbarState: DashboardToolbarState
 	private let connsStorage: ClashConnsStorage
@@ -41,6 +47,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 	private var lastSourceIPs: [String] = []
 	private var lastAppNames: [String] = []
 	private var lastHasInternal = false
+	private var isClosingFilteredConnections = false
 	// Guards per-tick setLabel calls; conns streams publish far more often than counts change.
 	private var lastSegmentCounts = (active: -1, closed: -1)
 	private let logLevels: [ClashLogLevel] = [.silent, .error, .warning, .info, .debug]
@@ -71,7 +78,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 	func attach(to window: NSWindow) {
 		attachedWindow = window
 		window.toolbar = toolbar
-		updateToolbar()
+		updateToolbar(.full)
 		if cachedControl(.dashSourceIP) != nil {
 			repopulateGroupedFilterMenu()
 		}
@@ -86,6 +93,10 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 		!connsStorage.allSourceIPs.isEmpty || !connsStorage.conns.isEmpty || !connsStorage.closedConns.isEmpty
 	}
 
+	private var hasConnectionSearch: Bool {
+		!toolbarState.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+	}
+
 	private func desiredIdentifiers() -> [NSToolbarItem.Identifier] {
 		var ids: [NSToolbarItem.Identifier] = [.toggleSidebar, .sidebarTrackingSeparator]
 		switch chromeState.selection {
@@ -97,7 +108,11 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 			ids.append(contentsOf: [.dashSegmentedRules, .flexibleSpace])
 			if chromeState.ruleContentSegment == .ruleProviders { ids.append(.dashUpdateAllRules) }
 		case .conns:
-			ids.append(contentsOf: [.dashSegmentedConns, .flexibleSpace, .dashPauseRefresh, .dashStopAll])
+			ids.append(contentsOf: [.dashSegmentedConns, .flexibleSpace, .dashPauseRefresh])
+			if hasConnectionSearch, !toolbarState.connShowClosed {
+				ids.append(.dashCloseFilteredConns)
+			}
+			ids.append(.dashStopAll)
 			if hasConnsData { ids.append(.dashSourceIP) }
 		case .logs:
 			ids.append(contentsOf: [.dashLogFilter, .dashLogLevel])
@@ -117,41 +132,56 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 		}
 	}
 
-	private func updateToolbar(rebuild: Bool = false) {
+	private func updateToolbar(_ strategy: ToolbarUpdateStrategy) {
 		let desired = desiredIdentifiers()
-		let needsRebuild = rebuild || toolbar.items.map(\.itemIdentifier) != desired
-
-		if needsRebuild {
-			let oldToolbar = toolbar
-			attachedWindow?.toolbar = nil
-			oldToolbar?.delegate = nil
-			itemCache.removeAll()
-			trampolines.removeAll()
-			lastSourceIPs = []
-			lastAppNames = []
-			lastHasInternal = false
-			lastSegmentCounts = (active: -1, closed: -1)
-
-			let newToolbar = NSToolbar(identifier: "DashboardToolbar")
-			newToolbar.delegate = self
-			newToolbar.displayMode = .iconOnly
-			toolbar = newToolbar
-			attachedWindow?.toolbar = newToolbar
-
-			if toolbar.items.map(\.itemIdentifier) != desired {
-				mutateItemsOffline(desired)
-			}
-			if cachedControl(.dashSourceIP) != nil {
-				repopulateGroupedFilterMenu()
-			}
-			updatePopupSelection()
-			Task { await updateFilteredSegmentLabels() }
+		switch strategy {
+		case .full:
+			updateToolbarFull(to: desired)
+		case .diff:
+			updateToolbarDiff(to: desired)
 		}
+		updateCloseFilteredConnectionsButton()
 
 		let targetTitleVisibility: NSWindow.TitleVisibility = chromeState.showsSegmentedToolbar ? .hidden : .visible
 		if attachedWindow?.titleVisibility != targetTitleVisibility {
 			attachedWindow?.titleVisibility = targetTitleVisibility
 		}
+	}
+
+	private func updateToolbarFull(to desired: [NSToolbarItem.Identifier]) {
+		let oldToolbar = toolbar
+		attachedWindow?.toolbar = nil
+		oldToolbar?.delegate = nil
+		itemCache.removeAll()
+		trampolines.removeAll()
+		lastSourceIPs = []
+		lastAppNames = []
+		lastHasInternal = false
+		lastSegmentCounts = (active: -1, closed: -1)
+
+		let newToolbar = NSToolbar(identifier: "DashboardToolbar")
+		newToolbar.delegate = self
+		newToolbar.displayMode = .iconOnly
+		toolbar = newToolbar
+		attachedWindow?.toolbar = newToolbar
+
+		if toolbar.items.map(\.itemIdentifier) != desired {
+			mutateItemsOffline(desired)
+		}
+		refreshToolbarControls()
+	}
+
+	private func updateToolbarDiff(to desired: [NSToolbarItem.Identifier]) {
+		guard applyToolbarDiff(to: desired) else { return }
+		refreshToolbarControls()
+	}
+
+	private func refreshToolbarControls() {
+		if cachedControl(.dashSourceIP) != nil {
+			repopulateGroupedFilterMenu()
+		}
+		updatePopupSelection()
+		Task { await updateFilteredSegmentLabels() }
 	}
 
 	/// Detach the toolbar from the window, edit the items, then re-attach it.
@@ -162,17 +192,33 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 	private func mutateItemsOffline(_ desired: [NSToolbarItem.Identifier]) {
 		let window = attachedWindow
 		window?.toolbar = nil
+		applyToolbarDiff(to: desired)
+		window?.toolbar = toolbar
+	}
+
+	@discardableResult
+	private func applyToolbarDiff(to desired: [NSToolbarItem.Identifier]) -> Bool {
+		let desiredIdentifiers = Set(desired)
+		var changed = false
 
 		for (index, item) in toolbar.items.enumerated().reversed()
-		where !desired.contains(item.itemIdentifier) {
+		where !desiredIdentifiers.contains(item.itemIdentifier) {
 			toolbar.removeItem(at: index)
-		}
-		for (targetIndex, id) in desired.enumerated() where
-			!toolbar.items.contains(where: { $0.itemIdentifier == id }) {
-			toolbar.insertItem(withItemIdentifier: id, at: min(targetIndex, toolbar.items.count))
+			changed = true
 		}
 
-		window?.toolbar = toolbar
+		for (desiredIndex, id) in desired.enumerated() where
+			!toolbar.items.contains(where: { $0.itemIdentifier == id }) {
+			let followingIdentifier = desired.dropFirst(desiredIndex + 1).first { next in
+				toolbar.items.contains(where: { $0.itemIdentifier == next })
+			}
+			let insertionIndex = followingIdentifier.flatMap { next in
+				toolbar.items.firstIndex(where: { $0.itemIdentifier == next })
+			} ?? toolbar.items.count
+			toolbar.insertItem(withItemIdentifier: id, at: insertionIndex)
+			changed = true
+		}
+		return changed
 	}
 
 	// MARK: - Model -> Control subscriptions
@@ -182,7 +228,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] _ in
 				guard let self else { return }
-				self.updateToolbar(rebuild: true)
+				self.updateToolbar(.full)
 			}
 			.store(in: &cancellables)
 
@@ -190,7 +236,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] _ in
 				guard let self else { return }
-				self.updateToolbar()
+				self.updateToolbar(.full)
 				if self.chromeState.selection == .conns, self.cachedControl(.dashSourceIP) != nil {
 					self.repopulateGroupedFilterMenu()
 					self.updatePopupSelection()
@@ -206,7 +252,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 				if let seg = self.cachedControl(.dashSegmentedProxies) as? NSSegmentedControl {
 					seg.selectedSegment = segment == .proxyList ? 0 : 1
 				}
-				self.updateToolbar()
+				self.updateToolbar(.diff)
 			}
 			.store(in: &cancellables)
 
@@ -217,7 +263,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 				if let seg = self.cachedControl(.dashSegmentedRules) as? NSSegmentedControl {
 					seg.selectedSegment = segment == .ruleList ? 0 : 1
 				}
-				self.updateToolbar()
+				self.updateToolbar(.diff)
 			}
 			.store(in: &cancellables)
 
@@ -269,23 +315,35 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 		toolbarState.$connShowClosed
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] showClosed in
-				guard let self,
-				      let seg = self.cachedControl(.dashSegmentedConns) as? NSSegmentedControl else { return }
-				seg.selectedSegment = showClosed ? 1 : 0
+				guard let self else { return }
+				(self.cachedControl(.dashSegmentedConns) as? NSSegmentedControl)?.selectedSegment = showClosed ? 1 : 0
+				if self.chromeState.selection == .conns {
+					self.updateToolbar(.diff)
+				}
+				self.updateCloseFilteredConnectionsButton()
 			}
 			.store(in: &cancellables)
 
 		Publishers.CombineLatest3(toolbarState.$connAppFilter, toolbarState.$connSourceIPFilter, toolbarState.$connInternalFilter)
 			.receive(on: DispatchQueue.main)
 			.sink { [weak self] _, _, _ in
-				self?.updatePopupSelection()
-				Task { await self?.updateFilteredSegmentLabels() }
+				guard let self else { return }
+				self.updatePopupSelection()
+				self.updateCloseFilteredConnectionsButton()
+				Task { await self.updateFilteredSegmentLabels() }
 			}
 			.store(in: &cancellables)
 
 		toolbarState.$searchText
 			.receive(on: DispatchQueue.main)
-			.sink { [weak self] _ in Task { await self?.updateFilteredSegmentLabels() } }
+			.sink { [weak self] _ in
+				guard let self else { return }
+				if self.chromeState.selection == .conns {
+					self.updateToolbar(.diff)
+				}
+				self.updateCloseFilteredConnectionsButton()
+				Task { await self.updateFilteredSegmentLabels() }
+			}
 			.store(in: &cancellables)
 
 		connsStorage.$isPaused
@@ -315,6 +373,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 					}
 					self.cachedAppToPath = map
 					await self.updateFilteredSegmentLabels()
+					self.updateCloseFilteredConnectionsButton()
 					// Rebuild cachedIcons from actor (which caches by appName internally)
 					var icons: [String: NSImage] = [:]
 					for (app, (path, process)) in self.cachedAppToPath {
@@ -326,7 +385,7 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 				}
 				if self.chromeState.selection == .conns,
 				   self.hasConnsData != self.toolbar.items.contains(where: { $0.itemIdentifier == .dashSourceIP }) {
-					self.updateToolbar()
+					self.updateToolbar(.diff)
 				}
 			}
 			.store(in: &cancellables)
@@ -335,7 +394,12 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 	// MARK: - Control helpers
 
 	private func cachedControl(_ id: NSToolbarItem.Identifier) -> NSView? {
-		itemCache[id]?.view
+		guard toolbar.items.contains(where: { $0.itemIdentifier == id }) else { return nil }
+		return itemCache[id]?.view
+	}
+
+	private func closeFilteredConnectionsButton() -> NSButton? {
+		cachedControl(.dashCloseFilteredConns) as? NSButton
 	}
 
 	private func updateConnsSegmentLabels() {
@@ -358,18 +422,58 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 	}
 
 	private func filteredCount(conns: [DBConnection], keyword: String, sourceIP: String, appFilter: String, internalFilter: Bool) -> Int {
-		conns.filter { conn in
-			if internalFilter {
-				let isInner = conn.metadata.type == "Inner" || "\(conn.metadata.sourceIP):\(conn.metadata.sourcePort)" == ":0"
-				guard isInner else { return false }
-			}
-			guard conn.matches(keyword: keyword, sourceIP: sourceIP) else { return false }
-			if !appFilter.isEmpty {
-				let name = cachedAppNames[conn.metadata.processPath] ?? conn.metadata.process
-				guard name == appFilter else { return false }
-			}
-			return true
+		conns.filter {
+			connectionMatches($0, keyword: keyword, sourceIP: sourceIP, appFilter: appFilter, internalFilter: internalFilter)
 		}.count
+	}
+
+	private func connectionMatches(_ conn: DBConnection, keyword: String, sourceIP: String, appFilter: String, internalFilter: Bool) -> Bool {
+		if internalFilter {
+			let isInner = conn.metadata.type == "Inner" || "\(conn.metadata.sourceIP):\(conn.metadata.sourcePort)" == ":0"
+			guard isInner else { return false }
+		}
+		guard conn.matches(keyword: keyword, sourceIP: sourceIP) else { return false }
+		if !appFilter.isEmpty {
+			let name = cachedAppNames[conn.metadata.processPath] ?? conn.metadata.process
+			guard name == appFilter else { return false }
+		}
+		return true
+	}
+
+	private func updateCloseFilteredConnectionsButton() {
+		guard let button = closeFilteredConnectionsButton() else { return }
+		let matchCount = filteredCount(
+			conns: connsStorage.conns,
+			keyword: toolbarState.searchText,
+			sourceIP: toolbarState.connSourceIPFilter,
+			appFilter: toolbarState.connAppFilter,
+			internalFilter: toolbarState.connInternalFilter
+		)
+		button.isEnabled = hasConnectionSearch && !toolbarState.connShowClosed && !isClosingFilteredConnections && matchCount > 0
+	}
+
+	private func closeFilteredConnections() {
+		guard hasConnectionSearch, !toolbarState.connShowClosed, !isClosingFilteredConnections else { return }
+		let ids = connsStorage.conns.compactMap { conn in
+			connectionMatches(
+				conn,
+				keyword: toolbarState.searchText,
+				sourceIP: toolbarState.connSourceIPFilter,
+				appFilter: toolbarState.connAppFilter,
+				internalFilter: toolbarState.connInternalFilter
+			) ? conn.id : nil
+		}
+		guard !ids.isEmpty else { return }
+
+		isClosingFilteredConnections = true
+		updateCloseFilteredConnectionsButton()
+		Task {
+			for id in ids {
+				await ApiRequest.closeConnection(id)
+			}
+			self.isClosingFilteredConnections = false
+			self.updateCloseFilteredConnectionsButton()
+		}
 	}
 
 	private func updatePopupSelection() {
@@ -622,6 +726,28 @@ final class DashboardToolbarController: NSObject, NSMenuDelegate {
 			item = wrappedItem(id: identifier,
 			                   label: NSLocalizedString("Stop All", comment: ""),
 			                   view: button)
+		case .dashCloseFilteredConns:
+			let trampoline = makeTrampoline { [weak self] in
+				self?.closeFilteredConnections()
+			}
+			let button = NSButton(image: NSImage(systemSymbolName: "xmark.circle", accessibilityDescription: nil) ?? NSImage(),
+			                       target: trampoline,
+			                       action: #selector(ActionTrampoline.fire))
+			button.isBordered = true
+			button.bezelStyle = .texturedRounded
+			button.setAccessibilityLabel(NSLocalizedString("Close Filtered Connections", comment: ""))
+			button.toolTip = NSLocalizedString("Close All Filtered Connections", comment: "")
+			button.isEnabled = hasConnectionSearch && !toolbarState.connShowClosed && !isClosingFilteredConnections && filteredCount(
+				conns: connsStorage.conns,
+				keyword: toolbarState.searchText,
+				sourceIP: toolbarState.connSourceIPFilter,
+				appFilter: toolbarState.connAppFilter,
+				internalFilter: toolbarState.connInternalFilter
+			) > 0
+
+			item = wrappedItem(id: identifier,
+			                   label: NSLocalizedString("Close Filtered Connections", comment: ""),
+			                   view: button)
 		case .dashSourceIP:
 			let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 160, height: 26), pullsDown: false)
 			popup.addItem(withTitle: NSLocalizedString("All", comment: ""))
@@ -739,7 +865,7 @@ extension DashboardToolbarController: NSToolbarDelegate {
 			.toggleSidebar, .sidebarTrackingSeparator,
 			.dashSegmentedProxies, .dashSegmentedRules, .dashSegmentedConns,
 			.dashUpdateAllProxies, .dashUpdateAllRules, .dashHideNames, .dashSearch,
-			.dashPauseRefresh, .dashStopAll, .dashSourceIP, .dashLogFilter, .dashLogLevel,
+			.dashPauseRefresh, .dashCloseFilteredConns, .dashStopAll, .dashSourceIP, .dashLogFilter, .dashLogLevel,
 			.flexibleSpace, .space,
 		]
 	}

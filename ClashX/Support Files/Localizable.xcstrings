@@ -1,6 +1,52 @@
 {
   "sourceLanguage": "en",
   "strings": {
+  "Close All Filtered Connections": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Close All Filtered Connections"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "关闭所有筛选出的连接"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "關閉所有篩選出的連線"
+        }
+      }
+    }
+  },
+  "Close Filtered Connections": {
+    "extractionState": "manual",
+    "localizations": {
+      "en": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "Close Filtered Connections"
+        }
+      },
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "关闭筛选连接"
+        }
+      },
+      "zh-Hant": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "關閉篩選連線"
+        }
+      }
+    }
+  },
   "Too many core logs. Reception will resume automatically after 60 seconds.": {
     "extractionState": "manual",
     "localizations": {
